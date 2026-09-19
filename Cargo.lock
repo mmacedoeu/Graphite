@@ -2296,6 +2296,7 @@ name = "graphite-agent-descriptors"
 version = "0.0.0"
 dependencies = [
  "clap",
+ "fancy-regex 0.18.0",
  "futures",
  "graph-craft",
  "graphene-std",
@@ -2304,6 +2305,8 @@ dependencies = [
  "jsonschema",
  "serde",
  "serde_json",
+ "sha2",
+ "tempfile",
 ]
 
 [[package]]
