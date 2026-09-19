@@ -51,8 +51,13 @@ fn size_annotation(tool: &str) -> Option<u32> {
 		"node.list_types" => Some(200_000),
 		// A large graph's node dump.
 		"graph.list_nodes" => Some(200_000),
-		// A base64 PNG, and the only tool that can plausibly reach the ceiling.
+		// A base64 PNG (and the GIF below), the only tools that can plausibly reach the ceiling.
 		"render.preview" => Some(MAX_RESULT_SIZE_CHARS_CEILING),
+		// An animated GIF: at the documented defaults (fps=30, frames=60,
+		// max_dimension=512) the encoded buffer stays under ~5 MB; the host
+		// chrome turns the GIF into JSON anyway and the ceiling raised by this
+		// annotation avoids the host silently clipping to ~25k characters.
+		"render.preview_gif" => Some(MAX_RESULT_SIZE_CHARS_CEILING),
 		_ => None,
 	}
 }
@@ -72,7 +77,10 @@ pub fn annotate(descriptor: ToolDescriptor) -> ToolDescriptor {
 /// Every tool name that carries a size annotation. Used by the conformance tests to
 /// prove each annotated name is a real `tools/list` entry.
 pub fn annotated_tool_names() -> Vec<String> {
-	["node.list_types", "graph.list_nodes", "render.preview"].into_iter().map(str::to_string).collect()
+	["node.list_types", "graph.list_nodes", "render.preview", "render.preview_gif"]
+		.into_iter()
+		.map(str::to_string)
+		.collect()
 }
 
 /// Submit one curated query under the host-allocated call id and drive the editor
