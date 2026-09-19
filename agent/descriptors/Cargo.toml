@@ -28,6 +28,18 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 futures = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
+# `fancy-regex` is already a workspace dep through `text-nodes`; the recipes
+# layer borrows it for the id regex and the timeline-marker regex (which
+# mirrors motion-design's `build_gallery.py:108`). Reusing the workspace dep
+# keeps build time flat.
+fancy-regex = { workspace = true }
+
+[dependencies.sha2]
+# `sha2 = "0.10"` declares the version directly because the workspace does
+# not depend on it transitively; the recipes layer computes sha256 hex of
+# `source.gdd` and `asset.<gif|png>` files for cargo-style pinning.
+version = "0.10"
 
 [dev-dependencies]
 jsonschema = "0.56"
+tempfile = "3"

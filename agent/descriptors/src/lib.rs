@@ -15,6 +15,7 @@ pub mod actions;
 pub mod classify;
 pub mod commands;
 pub mod inventory;
+pub mod recipes;
 pub mod version;
 
 use graphene_std::Type;
