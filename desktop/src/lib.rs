@@ -12,6 +12,7 @@ use winit::event_loop::EventLoop;
 pub(crate) use graphite_desktop_ui as ui;
 pub(crate) use graphite_desktop_wrapper as wrapper;
 
+mod agent_bridge;
 mod app;
 mod cli;
 mod dirs;
@@ -87,7 +88,18 @@ pub fn start() -> ExitCode {
 	let (app_event_sender, app_event_receiver) = std::sync::mpsc::channel();
 	let app_event_scheduler = event_loop.create_app_event_scheduler(app_event_sender);
 
-	let _socket_handle = socket::start(app_event_scheduler.clone());
+	// T4.2/T4.3: the agent bridge is opt-in. Without `--agent-bridge` no endpoint,
+	// handle, or reply sink is created and behavior is unchanged.
+	let (agent_bridge_endpoints, agent_bridge_handle, agent_reply_sink) = if cli.agent_bridge {
+		let (reply_sender, reply_receiver) = futures::channel::mpsc::unbounded::<crate::wrapper::graphite_agent_protocol::ToolOutcome>();
+		let (change_sender, change_receiver) = std::sync::mpsc::channel();
+		let endpoints = agent_bridge::AgentBridgeEndpoints::new(reply_receiver, change_receiver);
+		(Some(std::sync::Arc::new(endpoints)), Some(agent_bridge::AgentBridgeHandle::new(change_sender)), Some(reply_sender))
+	} else {
+		(None, None, None)
+	};
+
+	let _socket_handle = socket::start(app_event_scheduler.clone(), agent_bridge_endpoints);
 
 	if cli.disable_ui_acceleration {
 		prefs.disable_ui_acceleration = true;
@@ -140,7 +152,16 @@ pub fn start() -> ExitCode {
 		}
 	}
 
-	let app = App::new(ui.clone(), wgpu_context, app_event_receiver, app_event_scheduler, prefs, cli.files);
+	let app = App::new(
+		ui.clone(),
+		wgpu_context,
+		app_event_receiver,
+		app_event_scheduler,
+		prefs,
+		cli.files,
+		agent_bridge_handle,
+		agent_reply_sink,
+	);
 
 	let exit_reason = app.run(event_loop);
 

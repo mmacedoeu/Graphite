@@ -1,0 +1,39 @@
+[package]
+name = "graphite-agent-host"
+description = "ToolHost, tool modules, and session-mode bridges for the Graphite agentic MCP subsystem"
+version.workspace = true
+license.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+# Local dependencies
+graphite-editor = { workspace = true }
+graphite-agent-protocol = { path = "../protocol" }
+graphite-agent-descriptors = { path = "../descriptors" }
+document-format = { workspace = true }
+document-container = { workspace = true }
+# Phase 5 needs the registry -> runtime conversion (`to_runtime_with_metadata`) for the
+# semantic validation pass (INV-9). The workspace dependency disables default features.
+document-graph-storage = { workspace = true, features = ["conversion"] }
+graph-craft = { workspace = true }
+interpreted-executor = { workspace = true }
+wgpu-executor = { workspace = true }
+graphene-std = { workspace = true, features = ["shader-nodes"] }
+graphene-cli = { path = "../../node-graph/graphene-cli" }
+
+# Workspace dependencies
+serde = { workspace = true }
+serde_json = { workspace = true }
+futures = { workspace = true }
+base64 = { workspace = true }
+tokio = { workspace = true, features = ["sync", "rt-multi-thread", "time"] }
+# The attached-socket framing is RON-encoded (T4.1); `ron` is already a workspace
+# dependency used by the desktop socket. Phase 5's `registry.merge` ships `Delta`
+# values, whose `Rev` is a `u128`, so the `integer128` codec support is required.
+ron = { workspace = true, features = ["integer128"] }
+
+# Not a workspace dependency: declared as a version dependency (M-B1).
+interprocess = "2.4.2"

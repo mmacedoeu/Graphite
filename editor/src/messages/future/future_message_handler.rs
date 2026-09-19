@@ -19,6 +19,25 @@ fn noop_wake() -> Wake {
 	Arc::new(|| {})
 }
 
+/// Process-global wake for the single headless editor (INV-11: exactly one `Editor`
+/// per process). `headless_wake()`'s closure signals this; the host awaits it in
+/// `pump` (§5.3, §5.4).
+#[cfg(not(target_family = "wasm"))]
+static HEADLESS_WAKE: std::sync::OnceLock<Arc<tokio::sync::Notify>> = std::sync::OnceLock::new();
+
+/// The `Notify` that the `Wake` returned by `Editor::new_headless` signals.
+#[cfg(not(target_family = "wasm"))]
+pub fn headless_wake_notify() -> Arc<tokio::sync::Notify> {
+	HEADLESS_WAKE.get_or_init(|| Arc::new(tokio::sync::Notify::new())).clone()
+}
+
+/// A real signaling [`Wake`] for `Editor::new_headless`, not a no-op (HIGH-12).
+#[cfg(not(target_family = "wasm"))]
+pub fn headless_wake() -> Wake {
+	let notify = headless_wake_notify();
+	Arc::new(move || notify.notify_one())
+}
+
 /// One-shot async work whose result re-enters the dispatcher as a [`Message`].
 /// Resolves to [`Message::NoOp`] if polled after the inner future has already been taken.
 #[derive(Clone, Default)]

@@ -3,6 +3,7 @@ pub use crate::utility_traits::{ActionList, AsMessage, ExtractField, Hierarchica
 pub use crate::utility_types::{DebugMessageTree, MessageData};
 
 // Message, MessageData, MessageDiscriminant, MessageHandler
+pub use crate::messages::agent::{AgentMessage, AgentMessageContext, AgentMessageDiscriminant, AgentMessageHandler, AgentReplySink};
 pub use crate::messages::animation::{AnimationMessage, AnimationMessageDiscriminant, AnimationMessageHandler};
 pub use crate::messages::app_window::{AppWindowMessage, AppWindowMessageDiscriminant, AppWindowMessageHandler};
 pub use crate::messages::broadcast::event::{EventMessage, EventMessageContext, EventMessageDiscriminant, EventMessageHandler};

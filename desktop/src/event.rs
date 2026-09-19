@@ -1,4 +1,5 @@
 use crate::ui::Cursor;
+use crate::wrapper::AgentMessage;
 use crate::wrapper::NodeGraphExecutionResult;
 use crate::wrapper::messages::DesktopWrapperMessage;
 
@@ -7,6 +8,8 @@ pub(crate) enum AppEvent {
 	CursorChange(Cursor),
 	WebCommunicationInitialized,
 	DesktopWrapperMessage(DesktopWrapperMessage),
+	/// An inbound curated `AgentMessage` from the agent bridge socket (T4.3).
+	AgentMessage(AgentMessage),
 	NodeGraphExecutionResult(NodeGraphExecutionResult),
 	ClipboardRead,
 	ClipboardWrite {

@@ -1,0 +1,128 @@
+# agent_safe allowlist — DEFAULT DENY.
+#
+# A name is classified agent-safe if and only if it appears in the `agent_safe`
+# array below. There are no subjective rules or heuristics.
+#
+# TWO KINDS OF ENTRY:
+#  - Curated MCP tool names (no prefix), e.g. "document.new". These are the names
+#    that appear in `tools/list` (§17).
+#  - Generated message-action names, always "command." + the action's
+#    `AsMessage::global_name()`, lowercased, with every character outside
+#    [a-z0-9.] replaced by `_` (the §6.3 naming rule). This name IS the generated
+#    command descriptor name, so "is this action allowlisted?" is exactly
+#    `classify::is_agent_safe(command::command_name(action.global_name()))`.
+#
+# `agent_safe` is DESCRIPTIVE (E-8): command descriptors are catalog data, never
+# MCP tools, and executing a message action by name is forbidden (INV-13). The
+# allowlist therefore only drives classification/coverage, not execution.
+#
+# Each entry carries a one-line justification.
+
+agent_safe = [
+	# --- Curated MCP tools (§17 Appendix A) ---
+	"document.new",       # creates a document via the contract
+	"document.open",      # opens a document from a confined path
+	"document.save",      # exports the document under the confinement root
+	"document.close",     # closes a document
+	"document.list",      # lists open documents
+	"node.list_types",    # generated node catalog listing
+	"node.describe",      # one generated node descriptor
+	"graph.add_node",     # authoring: adds a node
+	"graph.remove_node",  # authoring: removes a node
+	"graph.set_input",    # authoring: sets a node input
+	"graph.connect",      # authoring: connects two ports
+	"graph.disconnect",   # authoring: disconnects a port
+	"graph.list_nodes",   # reads the document's node list
+	"graph.get_node",     # reads one node
+	"history.undo",       # reverts the last transaction
+	"history.redo",       # re-applies the last reverted transaction
+	"history.begin",      # opens an explicit transaction
+	"history.commit",     # commits the open transaction
+	"history.abort",      # aborts the open transaction
+	"render.preview",     # renders a PNG preview
+	"render.export",      # writes a rendered PNG under the root
+
+	# Animation (playback preview; no document mutation)
+	"command.animation.restartanimation", # Animation.RestartAnimation — restarts the live animation preview
+	"command.animation.setframeindex", # Animation.SetFrameIndex — scrubs the live animation preview to a frame
+	"command.animation.togglelivepreview", # Animation.ToggleLivePreview — toggles the non-destructive animation preview
+
+	# Clipboard (read-only copy; cut/paste mutate and are excluded)
+	"command.clipboard.copy", # Clipboard.Copy — copies the current selection without mutating it
+
+	# Debug (logging verbosity only)
+	"command.debug.messagecontents", # Debug.MessageContents — switches message logging to full contents
+	"command.debug.messagenames", # Debug.MessageNames — switches message logging to names only
+	"command.debug.messageoff", # Debug.MessageOff — turns message logging off
+	"command.debug.toggletracelogs", # Debug.ToggleTraceLogs — toggles trace-level logging
+
+	# Portfolio (navigation and panel visibility; no file dialogs)
+	"command.portfolio.nextdocument", # Portfolio.NextDocument — switches to the next open document
+	"command.portfolio.prevdocument", # Portfolio.PrevDocument — switches to the previous open document
+	"command.portfolio.toggledatapanelopen", # Portfolio.ToggleDataPanelOpen — shows or hides the data panel
+	"command.portfolio.togglefocusdocument", # Portfolio.ToggleFocusDocument — toggles document focus, a view-only state
+	"command.portfolio.togglelayerspanelopen", # Portfolio.ToggleLayersPanelOpen — shows or hides the layers panel
+	"command.portfolio.togglepropertiespanelopen", # Portfolio.TogglePropertiesPanelOpen — shows or hides the properties panel
+	"command.portfolio.togglerulers", # Portfolio.ToggleRulers — shows or hides canvas rulers
+
+	# Portfolio.Document (selection, view, undo; no save/open/close)
+	"command.portfolio.document.createemptyfolder", # Portfolio.Document.CreateEmptyFolder — creates an empty folder layer
+	"command.portfolio.document.deselectalllayers", # Portfolio.Document.DeselectAllLayers — clears the selection
+	"command.portfolio.document.graphviewoverlaytoggle", # Portfolio.Document.GraphViewOverlayToggle — toggles the node-graph overlay view
+	"command.portfolio.document.navigation.begincanvaspan", # Portfolio.Document.Navigation.BeginCanvasPan — starts a canvas pan interaction
+	"command.portfolio.document.navigation.begincanvastilt", # Portfolio.Document.Navigation.BeginCanvasTilt — starts a canvas tilt interaction
+	"command.portfolio.document.navigation.begincanvaszoom", # Portfolio.Document.Navigation.BeginCanvasZoom — starts a canvas zoom interaction
+	"command.portfolio.document.navigation.canvasflip", # Portfolio.Document.Navigation.CanvasFlip — flips the canvas horizontally
+	"command.portfolio.document.navigation.canvaspan", # Portfolio.Document.Navigation.CanvasPan — pans the canvas by a delta
+	"command.portfolio.document.navigation.canvaspanbyviewportfraction", # Portfolio.Document.Navigation.CanvasPanByViewportFraction — pans the canvas by a viewport fraction
+	"command.portfolio.document.navigation.canvaspanmousewheel", # Portfolio.Document.Navigation.CanvasPanMouseWheel — pans the canvas from a wheel event
+	"command.portfolio.document.navigation.canvastiltset", # Portfolio.Document.Navigation.CanvasTiltSet — sets the canvas tilt angle
+	"command.portfolio.document.navigation.canvaszoomdecrease", # Portfolio.Document.Navigation.CanvasZoomDecrease — zooms the canvas out
+	"command.portfolio.document.navigation.canvaszoomincrease", # Portfolio.Document.Navigation.CanvasZoomIncrease — zooms the canvas in
+	"command.portfolio.document.navigation.canvaszoommousewheel", # Portfolio.Document.Navigation.CanvasZoomMouseWheel — zooms the canvas from a wheel event
+	"command.portfolio.document.navigation.fitviewporttoselection", # Portfolio.Document.Navigation.FitViewportToSelection — frames the selection in the viewport
+	"command.portfolio.document.noop", # Portfolio.Document.Noop — deliberately does nothing
+	"command.portfolio.document.redo", # Portfolio.Document.Redo — re-applies the last undone edit
+	"command.portfolio.document.selectalllayers", # Portfolio.Document.SelectAllLayers — selects every layer
+	"command.portfolio.document.selectionstepback", # Portfolio.Document.SelectionStepBack — steps back through the selection history
+	"command.portfolio.document.selectionstepforward", # Portfolio.Document.SelectionStepForward — steps forward through the selection history
+	"command.portfolio.document.selectparentlayer", # Portfolio.Document.SelectParentLayer — selects the parent of the current selection
+	"command.portfolio.document.setsnapping", # Portfolio.Document.SetSnapping — sets the snapping state
+	"command.portfolio.document.togglegridvisibility", # Portfolio.Document.ToggleGridVisibility — shows or hides the grid
+	"command.portfolio.document.toggleoverlaysvisibility", # Portfolio.Document.ToggleOverlaysVisibility — shows or hides canvas overlays
+	"command.portfolio.document.togglesnapping", # Portfolio.Document.ToggleSnapping — toggles snapping
+	"command.portfolio.document.undo", # Portfolio.Document.Undo — reverts the last edit
+	"command.portfolio.document.zoomcanvasto100percent", # Portfolio.Document.ZoomCanvasTo100Percent — zooms the canvas to 100%
+	"command.portfolio.document.zoomcanvasto200percent", # Portfolio.Document.ZoomCanvasTo200Percent — zooms the canvas to 200%
+	"command.portfolio.document.zoomcanvastofitall", # Portfolio.Document.ZoomCanvasToFitAll — fits the whole document in the viewport
+
+	# Tool (tool activation and view/colour state; no destructive edits)
+	"command.tool.activatetoolartboard", # Tool.ActivateToolArtboard — activates the artboard tool
+	"command.tool.activatetooleyedropper", # Tool.ActivateToolEyedropper — activates the eyedropper tool
+	"command.tool.activatetoolfill", # Tool.ActivateToolFill — activates the fill tool
+	"command.tool.activatetoolfreehand", # Tool.ActivateToolFreehand — activates the freehand tool
+	"command.tool.activatetoolgradient", # Tool.ActivateToolGradient — activates the gradient tool
+	"command.tool.activatetoolnavigate", # Tool.ActivateToolNavigate — activates the navigate tool
+	"command.tool.activatetoolpath", # Tool.ActivateToolPath — activates the path tool
+	"command.tool.activatetoolpen", # Tool.ActivateToolPen — activates the pen tool
+	"command.tool.activatetoolselect", # Tool.ActivateToolSelect — activates the select tool
+	"command.tool.activatetoolshape", # Tool.ActivateToolShape — activates the shape tool
+	"command.tool.activatetoolshapeellipse", # Tool.ActivateToolShapeEllipse — activates the ellipse shape tool
+	"command.tool.activatetoolshapeline", # Tool.ActivateToolShapeLine — activates the line shape tool
+	"command.tool.activatetoolshaperectangle", # Tool.ActivateToolShapeRectangle — activates the rectangle shape tool
+	"command.tool.activatetoolspline", # Tool.ActivateToolSpline — activates the spline tool
+	"command.tool.activatetooltext", # Tool.ActivateToolText — activates the text tool
+	"command.tool.resetcolors", # Tool.ResetColors — resets the working primary/secondary colours
+	"command.tool.select.abort", # Tool.Select.Abort — aborts the in-progress select-tool interaction
+	"command.tool.select.dragstart", # Tool.Select.DragStart — starts a select-tool drag
+	"command.tool.select.editlayer", # Tool.Select.EditLayer — enters layer-edit mode for the selection
+	"command.tool.select.editlayerexec", # Tool.Select.EditLayerExec — commits the layer-edit mode
+	"command.tool.select.enter", # Tool.Select.Enter — confirms the current select-tool interaction
+	"command.tool.select.pointermove", # Tool.Select.PointerMove — forwards a pointer move to the select tool
+	"command.tool.selectrandomworkingcolor", # Tool.SelectRandomWorkingColor — assigns a random working colour
+	"command.tool.swapcolors", # Tool.SwapColors — swaps the primary and secondary working colours
+	"command.tool.toggleselectvspath", # Tool.ToggleSelectVsPath — switches the select tool between node and path modes
+	"command.tool.transformlayer.begingrab", # Tool.TransformLayer.BeginGrab — starts a translate transform
+	"command.tool.transformlayer.beginrotate", # Tool.TransformLayer.BeginRotate — starts a rotate transform
+	"command.tool.transformlayer.beginscale", # Tool.TransformLayer.BeginScale — starts a scale transform
+]

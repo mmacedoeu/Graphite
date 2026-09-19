@@ -202,6 +202,11 @@ pub enum DocumentMessage {
 	SetRenderMode {
 		render_mode: RenderMode,
 	},
+	/// Export this document to `.gdd` bytes and reply through `AgentMessage::Reply`
+	/// with `{ "gdd_base64": "..." }`. Async by design (INV-15, HIGH-B1).
+	ExportGdd {
+		request_id: u64,
+	},
 	AddTransaction,
 	StartTransaction,
 	EndTransaction,

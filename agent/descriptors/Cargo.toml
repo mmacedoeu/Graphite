@@ -1,0 +1,33 @@
+[package]
+name = "graphite-agent-descriptors"
+description = "Generates the agent tool descriptor catalog from Graphene node metadata"
+version.workspace = true
+license.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "graphite-agent-descriptors"
+path = "src/main.rs"
+
+[dependencies]
+# Local dependencies
+# `shader-nodes` matches the editor's GPU consumers (M-A9). Never depend on `agent/host` (HIGH-1).
+graphene-std = { workspace = true, features = ["shader-nodes"] }
+graphite-editor = { workspace = true }
+graphite-agent-protocol = { path = "../protocol" }
+# `graph-craft` supplies the concrete `HashMapResourceStorage` that `HeadlessEditorState`
+# requires for the T3.2 catalog editor (the same storage the Phase 2 host uses). It is
+# already a workspace dependency, so this adds an edge, not a crate.
+graph-craft = { workspace = true }
+
+# Workspace dependencies
+serde = { workspace = true }
+serde_json = { workspace = true }
+futures = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+jsonschema = "0.56"

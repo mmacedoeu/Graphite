@@ -1,0 +1,30 @@
+# Clippy baseline — pre-existing diagnostics per crate (execution finding E-4).
+#
+# The `clippy -D warnings` gate in this plan cannot pass against the current stable
+# toolchain: the `editor` crate already reports the diagnostics below in files that
+# are outside every phase's write scope. The gate is therefore baseline-relative:
+# a phase must not ADD any `file:line` entry, and no diagnostic may point at a file
+# the phase created.
+#
+# Regenerate with:
+#   cargo clippy -p <crate> --all-targets --no-deps 2>&1 \
+#     | grep -E '^\s+--> ' | sed 's/^ *--> //' | sort -u
+#
+# [graphite-agent-protocol]  (none)
+# [graphite-agent-descriptors]  (none)
+# [graphene-cli]  (none)
+
+[graphite-editor]
+editor/src/dispatcher.rs:500:5
+editor/src/dispatcher.rs:505:6
+editor/src/dispatcher.rs:506:7
+editor/src/messages/input_mapper/input_mappings.rs:468:44
+editor/src/messages/message.rs:6:1
+editor/src/messages/portfolio/document/document_message_handler.rs:4154:5
+editor/src/messages/portfolio/document/document_message_handler.rs:4214:3
+editor/src/messages/portfolio/document/utility_types/network_interface/layout.rs:231:3
+editor/src/messages/portfolio/portfolio_message.rs:13:1
+editor/src/messages/tool/common_functionality/gizmos/shape_gizmos/spiral_turns_handle.rs:71:2
+editor/src/messages/tool/common_functionality/shapes/shape_utility.rs:91:3
+editor/src/messages/tool/common_functionality/snapping/distribution_snapper.rs:680:6
+editor/src/node_graph_executor.rs:984:11

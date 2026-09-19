@@ -9,6 +9,58 @@ pub struct Editor {
 	pub dispatcher: Dispatcher,
 }
 
+/// Everything [`Editor::new_headless`] needs, so the host constructs it without
+/// touching editor internals (M-A8 / B-M7).
+#[cfg(not(target_family = "wasm"))]
+pub struct HeadlessEditorState {
+	/// Use the type `editor/src/application.rs` already imports; `graphene-resource`
+	/// is NOT a direct dependency of `editor` (M-B2).
+	pub resource_storage: Arc<dyn ResourceStorage>,
+	pub working_copy_root: std::path::PathBuf,
+	pub uuid_random_seed: u64,
+}
+
+#[cfg(not(target_family = "wasm"))]
+impl Editor {
+	/// Uses `Environment { platform: Platform::Desktop, host: <compile-time host> }`,
+	/// `PlatformApplicationIo::default()`, and a real signaling `Wake`.
+	/// Install the reply sink via `set_agent_reply_sink` before or after.
+	///
+	/// The returned `Wake` signals the process-global headless `Notify`, which the
+	/// host awaits via `crate::messages::future::headless_wake_notify()` (§5.4, INV-11).
+	pub fn new_headless(state: HeadlessEditorState) -> (Self, Wake) {
+		let wake = crate::messages::future::headless_wake();
+		let editor = Self::new(
+			Environment {
+				platform: Platform::Desktop,
+				host: compile_time_host(),
+			},
+			state.uuid_random_seed,
+			state.resource_storage,
+			Some(state.working_copy_root),
+			PlatformApplicationIo::default(),
+			wake.clone(),
+		);
+		(editor, wake)
+	}
+}
+
+#[cfg(not(target_family = "wasm"))]
+const fn compile_time_host() -> Host {
+	#[cfg(target_os = "windows")]
+	{
+		Host::Windows
+	}
+	#[cfg(target_os = "macos")]
+	{
+		Host::Mac
+	}
+	#[cfg(not(any(target_os = "windows", target_os = "macos")))]
+	{
+		Host::Linux
+	}
+}
+
 impl Editor {
 	pub fn new(
 		environment: Environment,
@@ -50,6 +102,12 @@ impl Editor {
 		self.dispatcher.handle_message(message, true);
 
 		std::mem::take(&mut self.dispatcher.responses)
+	}
+
+	/// Install the host-owned agent reply sink. Additive: `Editor::new`'s signature is
+	/// unchanged, so no out-of-scope caller has to be edited (B-M1).
+	pub fn set_agent_reply_sink(&mut self, sink: AgentReplySink) {
+		self.dispatcher.message_handlers.agent_message_handler.set_reply_sink(sink);
 	}
 
 	pub fn poll_node_graph_evaluation(&mut self, responses: &mut VecDeque<Message>) -> Result<(), String> {

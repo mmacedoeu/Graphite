@@ -11,6 +11,7 @@ pub mod navigation;
 pub mod node_graph;
 pub mod overlays;
 pub mod properties_panel;
+pub mod query;
 pub mod resource;
 pub mod utility_types;
 

@@ -6,6 +6,8 @@ use graphite_proc_macros::*;
 pub enum Message {
 	// Sub-messages
 	#[child]
+	Agent(AgentMessage),
+	#[child]
 	Animation(AnimationMessage),
 	#[child]
 	AppWindow(AppWindowMessage),

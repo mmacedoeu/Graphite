@@ -1,5 +1,6 @@
 //! The root-level messages forming the first layer of the message system architecture.
 
+pub mod agent;
 pub mod animation;
 pub mod app_window;
 pub mod broadcast;

@@ -1,0 +1,24 @@
+[package]
+name = "graphite-agent-mcp"
+description = "MCP transport adapter for the Graphite agentic MCP subsystem"
+version.workspace = true
+license.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+# Local dependencies
+graphite-agent-protocol = { path = "../protocol" }
+graphite-agent-host = { path = "../host" }
+
+# Workspace dependencies
+serde = { workspace = true }
+serde_json = { workspace = true }
+# `futures` polls `ToolHost::events()` (R9-M2); `io-util` is for the stdio reader (R7-M2).
+futures = { workspace = true }
+tokio = { workspace = true, features = ["io-util"] }
+
+# Not a workspace dependency: declared as a version dependency (M-B1).
+tiny_http = "0.12"

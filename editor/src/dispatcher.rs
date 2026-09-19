@@ -19,6 +19,7 @@ pub struct Dispatcher {
 
 #[derive(Debug, Default)]
 pub struct DispatcherMessageHandlers {
+	pub(crate) agent_message_handler: AgentMessageHandler,
 	animation_message_handler: AnimationMessageHandler,
 	app_window_message_handler: AppWindowMessageHandler,
 	pub(crate) future_message_handler: FutureMessageHandler,
@@ -175,6 +176,12 @@ impl Dispatcher {
 
 			// Process the action by forwarding it to the relevant message handler, or saving the FrontendMessage to be sent to the frontend
 			match message {
+				Message::Agent(message) => {
+					let context = AgentMessageContext {
+						portfolio: &mut self.message_handlers.portfolio_message_handler,
+					};
+					self.message_handlers.agent_message_handler.process_message(message, &mut queue, context);
+				}
 				Message::Animation(message) => {
 					if let AnimationMessage::IncrementFrameCounter = &message {
 						self.message_queues[0].extend(self.frontend_update_messages.drain(..));

@@ -16,6 +16,7 @@ use winit::event_loop::run_on_demand::EventLoopExtRunOnDemand;
 use winit::event_loop::{ActiveEventLoop, AsyncRequestSerial, ControlFlow, DndAction, EventLoop};
 use winit::window::WindowId;
 
+use crate::agent_bridge::AgentBridgeHandle;
 use crate::dirs;
 use crate::event::{AppEvent, AppEventScheduler};
 use crate::input::InputState;
@@ -25,7 +26,7 @@ use crate::render::{RenderError, RenderState};
 use crate::ui::{InputEvent, UiCommand, UiInstance};
 use crate::window::Window;
 use crate::wrapper::messages::{DesktopFrontendMessage, DesktopWrapperMessage, Preferences};
-use crate::wrapper::{DesktopWrapper, MmapResourceStorage, NodeGraphExecutionResult, WgpuContext, serialize_frontend_messages};
+use crate::wrapper::{AgentReplySink, DesktopWrapper, MmapResourceStorage, NodeGraphExecutionResult, WgpuContext, serialize_frontend_messages};
 
 pub(crate) struct App {
 	render_state: Option<RenderState>,
@@ -53,6 +54,8 @@ pub(crate) struct App {
 	startup_time: Option<Instant>,
 	exiting: Arc<AtomicBool>,
 	exit_reason: ExitReason,
+	/// Present only with `--agent-bridge` (T4.2/T4.6).
+	agent_bridge: Option<AgentBridgeHandle>,
 }
 
 impl App {
@@ -67,6 +70,8 @@ impl App {
 		app_event_scheduler: AppEventScheduler,
 		preferences: Preferences,
 		launch_documents: Vec<PathBuf>,
+		agent_bridge: Option<AgentBridgeHandle>,
+		agent_reply_sink: Option<AgentReplySink>,
 	) -> Self {
 		let ctrlc_app_event_scheduler = app_event_scheduler.clone();
 		ctrlc::set_handler(move || {
@@ -99,7 +104,11 @@ impl App {
 		let wake = Arc::new(move || {
 			wake_scheduler.schedule(AppEvent::DesktopWrapperMessage(DesktopWrapperMessage::Wake));
 		});
-		let desktop_wrapper = DesktopWrapper::new(rand::rng().random(), Arc::new(resource_storage), dirs::app_autosave_documents_dir(), wgpu_context.clone(), wake);
+		let mut desktop_wrapper = DesktopWrapper::new(rand::rng().random(), Arc::new(resource_storage), dirs::app_autosave_documents_dir(), wgpu_context.clone(), wake);
+		// T4.3: install the agent reply sink only when the bridge is enabled.
+		if let Some(sink) = agent_reply_sink {
+			desktop_wrapper.set_agent_reply_sink(sink);
+		}
 
 		Self {
 			render_state: None,
@@ -127,6 +136,7 @@ impl App {
 			startup_time: None,
 			exiting,
 			exit_reason: ExitReason::Shutdown,
+			agent_bridge,
 		}
 	}
 
@@ -423,6 +433,20 @@ impl App {
 	fn dispatch_desktop_wrapper_message(&mut self, message: DesktopWrapperMessage) {
 		let responses = self.desktop_wrapper.dispatch(message);
 		self.handle_desktop_frontend_messages(responses);
+		// T4.6: the desktop-side hook is minimal — just report that an editor message
+		// was dispatched. The agent debounces and attributes the document.
+		if let Some(agent_bridge) = &self.agent_bridge {
+			agent_bridge.editor_changed();
+		}
+	}
+
+	/// Dispatch one inbound curated `AgentMessage` from the agent bridge (T4.3).
+	fn dispatch_agent_message(&mut self, message: crate::wrapper::AgentMessage) {
+		let responses = self.desktop_wrapper.dispatch_agent_message(message);
+		self.handle_desktop_frontend_messages(responses);
+		if let Some(agent_bridge) = &self.agent_bridge {
+			agent_bridge.editor_changed();
+		}
 	}
 
 	fn send_or_queue_web_message(&mut self, message: Vec<u8>) {
@@ -442,6 +466,7 @@ impl App {
 				}
 			}
 			AppEvent::DesktopWrapperMessage(message) => self.dispatch_desktop_wrapper_message(message),
+			AppEvent::AgentMessage(message) => self.dispatch_agent_message(message),
 			AppEvent::NodeGraphExecutionResult(result) => match result {
 				NodeGraphExecutionResult::HasRun(texture) => {
 					self.dispatch_desktop_wrapper_message(DesktopWrapperMessage::PollNodeGraphEvaluation);

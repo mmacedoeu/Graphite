@@ -15,6 +15,7 @@ gpu = ["interpreted-executor/gpu", "dep:wgpu-executor"]
 [dependencies]
 # Local dependencies
 graphite-proc-macros = { workspace = true }
+graphite-agent-protocol = { path = "../agent/protocol" }
 graph-craft = { workspace = true }
 document-format = { workspace = true }
 document-graph-storage = { workspace = true, features = ["conversion"] }
@@ -60,7 +61,8 @@ wgpu-executor = { workspace = true, optional = true }
 wasm-bindgen = { workspace = true, optional = true }
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
-tokio = { workspace = true }
+# `sync` provides the headless `Notify` used by `Editor::new_headless` (§5.3, §5.4).
+tokio = { workspace = true, features = ["sync"] }
 
 [target.'cfg(target_family = "wasm")'.dependencies]
 wasm-bindgen-futures = { workspace = true }

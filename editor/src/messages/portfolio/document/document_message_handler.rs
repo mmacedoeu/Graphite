@@ -47,6 +47,7 @@ use graphene_std::vector::click_target::{ClickTarget, ClickTargetType};
 use graphene_std::vector::graphic_types;
 use graphene_std::vector::misc::dvec2_to_point;
 use graphene_std::vector::style::RenderMode;
+use graphite_agent_protocol::{ToolError, ToolOutcome};
 use kurbo::{Affine, BezPath, Line, PathSeg, Shape};
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -1031,6 +1032,53 @@ impl MessageHandler<DocumentMessage, DocumentMessageContext<'_>> for DocumentMes
 					position: scrollbar_position.into(),
 					size: scrollbar_size.into(),
 					multiplier: scrollbar_multiplier.into(),
+				});
+			}
+			DocumentMessage::ExportGdd { request_id } => {
+				// Mirrors the save path, but returns the bytes to the agent subsystem instead of
+				// handing them to a frontend save dialog (INV-15, HIGH-B1).
+				let mut document = self.clone();
+				let resources_load_handle = resource_storage.resources();
+				let export_load_handle = resource_storage.resources();
+
+				responses.add(async move {
+					document.resources.collect_garbage(document.used_resources(false).as_ref());
+					document.resources.embed_resources(resources_load_handle).await;
+
+					let legacy_document = document.serialize_document().into_bytes();
+					let content = match document.history.storage() {
+						Some(storage) => storage
+							.export_to_bytes(
+								document_format::ExportFormat::Xz,
+								document_format::ExportOptions {
+									include_history: false,
+									..Default::default()
+								},
+								export_load_handle.as_ref(),
+								Some(&legacy_document),
+							)
+							.await
+							.map_err(|error| error.to_string()),
+						None => Err("working copy not mounted yet".to_string()),
+					};
+
+					let outcome = match content {
+						Ok(bytes) => {
+							use base64::Engine as _;
+							ToolOutcome::Ok {
+								id: request_id,
+								result: serde_json::json!({ "gdd_base64": base64::engine::general_purpose::STANDARD.encode(bytes) }),
+							}
+						}
+						Err(error) => ToolOutcome::Err {
+							id: request_id,
+							error: ToolError::Internal {
+								message: format!("gdd export failed: {error}"),
+							},
+						},
+					};
+
+					Message::Agent(AgentMessage::Reply { id: request_id, outcome })
 				});
 			}
 			DocumentMessage::SaveDocument | DocumentMessage::SaveDocumentAs => {
