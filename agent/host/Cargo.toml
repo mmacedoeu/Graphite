@@ -37,3 +37,10 @@ ron = { workspace = true, features = ["integer128"] }
 
 # Not a workspace dependency: declared as a version dependency (M-B1).
 interprocess = "2.4.2"
+
+[dev-dependencies]
+# Used by the recipe_catalog tests for temp-dir fixtures.
+tempfile = "3"
+# Used by a future recipes_conformance.rs; included now so the deps
+# graph is stable before the conformance work touches the crate.
+jsonschema = "0.56"

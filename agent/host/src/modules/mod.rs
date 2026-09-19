@@ -6,6 +6,8 @@ pub mod document;
 pub mod graph;
 pub mod history;
 pub mod node_catalog;
+pub mod recipe_catalog;
+pub mod recipes;
 pub mod registry;
 pub mod render;
 pub mod session;

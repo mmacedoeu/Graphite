@@ -8,6 +8,7 @@ use crate::modules::document::DocumentModule;
 use crate::modules::graph::GraphModule;
 use crate::modules::history::HistoryModule;
 use crate::modules::node_catalog::NodeCatalogModule;
+use crate::modules::recipes::RecipesModule;
 use crate::modules::registry::RegistryModule;
 use crate::modules::render::RenderModule;
 use crate::modules::session::SessionModule;
@@ -149,6 +150,7 @@ impl Host {
 			Box::new(HistoryModule),
 			Box::new(RenderModule::new(paths)),
 			Box::new(SessionModule),
+			Box::new(RecipesModule::new()),
 			Box::new(RegistryModule::new(peer)),
 		];
 

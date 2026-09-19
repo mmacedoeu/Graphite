@@ -11,6 +11,7 @@ use futures::stream::FuturesUnordered;
 use graphite_agent_host::Host;
 use graphite_agent_host::modules::command_catalog::command_catalog;
 use graphite_agent_host::modules::node_catalog::node_catalog;
+use graphite_agent_host::modules::recipe_catalog;
 use graphite_agent_protocol::{QueryId, ToolError, ToolHost, ToolOutcome, ToolRequest};
 use serde_json::{Value, json};
 use std::collections::HashMap;
@@ -274,6 +275,12 @@ pub(crate) fn resources_list() -> Value {
 				"name": "Command catalog",
 				"description": "Generated command descriptors (catalog data; never tools, E-8).",
 				"mimeType": "application/json",
+			},
+			{
+				"uri": "graphite://recipe-catalog",
+				"name": "Recipe catalog",
+				"description": "Committed recipes & archetypes corpus; parsed from agent/recipes.json (recipes-and-archetypes plan).",
+				"mimeType": "application/json",
 			}
 		]
 	})
@@ -302,6 +309,18 @@ pub(crate) fn resources_read(id: &Value, params: &Value) -> Value {
 						"uri": "graphite://command-catalog",
 						"mimeType": "application/json",
 						"text": command_catalog().to_string(),
+					}
+				]
+			}),
+		),
+		Some("graphite://recipe-catalog") => success(
+			id,
+			json!({
+				"contents": [
+					{
+						"uri": "graphite://recipe-catalog",
+						"mimeType": "application/json",
+						"text": recipe_catalog::read_catalog().to_string(),
 					}
 				]
 			}),

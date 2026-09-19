@@ -37,7 +37,9 @@ const EXPECTED_TOOLS: &[&str] = &[
 	"history.commit",
 	"history.abort",
 	"render.preview",
+	"render.preview_gif",
 	"render.export",
+	"render.export_gif",
 	"session.snapshot",
 	"session.selection",
 	"session.active_document",
@@ -45,6 +47,9 @@ const EXPECTED_TOOLS: &[&str] = &[
 	"registry.query",
 	"registry.merge",
 	"history.replay",
+	"recipes.list",
+	"recipes.show",
+	"recipes.lint",
 ];
 
 struct ToolReply {
@@ -190,7 +195,10 @@ fn initialize_and_tools_list_match_the_curated_surface() {
 		);
 	}
 	let annotated: Vec<&str> = tools.iter().filter(|tool| tool.get("_meta").is_some()).filter_map(|tool| tool["name"].as_str()).collect();
-	assert_eq!(annotated.len(), 3, "unexpected annotated tools: {annotated:?}");
+	// Render.preview_gif (recipes-and-archetypes plan section 6.2) joins the
+	// three size-annotated tools; the host's size annotation table centralises
+	// the per-tool ceiling.
+	assert_eq!(annotated.len(), 4, "unexpected annotated tools: {annotated:?}");
 
 	// The generated catalog is non-empty and surfaced through the resource.
 	let catalog = agent.request("resources/read", json!({ "uri": "graphite://node-catalog" }));
