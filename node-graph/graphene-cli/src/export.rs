@@ -28,21 +28,20 @@ pub fn detect_file_type(path: &Path) -> Result<FileType, String> {
 	}
 }
 
-pub async fn export_document(
+/// A rendered document, either as SVG source text or as a flat RGBA raster buffer.
+enum RenderedOutput {
+	Svg(String),
+	Raster { data: Vec<u8>, width: u32, height: u32 },
+}
+
+/// Execute the graph against a render config and return the raw render result.
+async fn execute_render(
 	executor: &DynamicExecutor,
 	wgpu_executor: &wgpu_executor::WgpuExecutor,
-	output_path: PathBuf,
-	file_type: FileType,
+	export_format: ExportFormat,
 	scale: f64,
 	(width, height): (Option<u32>, Option<u32>),
-	transparent: bool,
-) -> Result<(), Box<dyn Error>> {
-	// Determine export format based on file type
-	let export_format = match file_type {
-		FileType::Svg => ExportFormat::Svg,
-		_ => ExportFormat::Raster,
-	};
-
+) -> Result<RenderedOutput, Box<dyn Error>> {
 	// Create render config with export settings
 	let mut render_config = RenderConfig {
 		scale,
@@ -62,36 +61,88 @@ pub async fn export_document(
 	// Handle the result based on output type
 	match result {
 		TaggedValue::RenderOutput(output) => match output.data {
-			RenderOutputType::Svg { svg, .. } => {
-				// Write SVG directly to file
-				std::fs::write(&output_path, svg)?;
-				log::info!("Exported SVG to: {}", output_path.display());
-			}
+			RenderOutputType::Svg { svg, .. } => Ok(RenderedOutput::Svg(svg)),
 			RenderOutputType::Texture(texture) => {
 				// Convert GPU texture to CPU buffer
 				let gpu_raster = Raster::<GPU>::new_gpu(texture);
 				let cpu_raster: Raster<CPU> = gpu_raster.convert(Footprint::BOUNDLESS, wgpu_executor).await;
 				let (data, width, height) = cpu_raster.to_flat_u8();
-
-				// Encode and write raster image
-				write_raster_image(output_path, file_type, data, width, height, transparent)?;
+				Ok(RenderedOutput::Raster { data, width, height })
 			}
-			RenderOutputType::Buffer { data, width, height } => {
-				// Encode and write raster image when buffer is already provided
-				write_raster_image(output_path, file_type, data, width, height, transparent)?;
-			}
+			RenderOutputType::Buffer { data, width, height } => Ok(RenderedOutput::Raster { data, width, height }),
 			#[cfg(target_family = "wasm")]
-			other => {
-				return Err(format!("Unexpected render output type: {:?}. Expected Texture, Buffer for raster export or Svg for SVG export.", other).into());
-			}
+			other => Err(format!("Unexpected render output type: {:?}. Expected Texture, Buffer for raster export or Svg for SVG export.", other).into()),
 		},
-		other => return Err(format!("Expected RenderOutput, got: {:?}", other).into()),
+		other => Err(format!("Expected RenderOutput, got: {:?}", other).into()),
+	}
+}
+
+pub async fn export_document(
+	executor: &DynamicExecutor,
+	wgpu_executor: &wgpu_executor::WgpuExecutor,
+	output_path: PathBuf,
+	file_type: FileType,
+	scale: f64,
+	(width, height): (Option<u32>, Option<u32>),
+	transparent: bool,
+) -> Result<(), Box<dyn Error>> {
+	// Determine export format based on file type
+	let export_format = match file_type {
+		FileType::Svg => ExportFormat::Svg,
+		_ => ExportFormat::Raster,
+	};
+
+	let rendered = execute_render(executor, wgpu_executor, export_format, scale, (width, height)).await?;
+
+	match rendered {
+		RenderedOutput::Svg(svg) => {
+			// Write SVG directly to file
+			std::fs::write(&output_path, svg)?;
+			log::info!("Exported SVG to: {}", output_path.display());
+		}
+		RenderedOutput::Raster { data, width, height } => {
+			// Encode and write raster image
+			write_raster_image(output_path, file_type, data, width, height, transparent)?;
+		}
 	}
 
 	Ok(())
 }
 
+/// Render a document directly into a PNG-encoded byte buffer instead of a file on disk.
+///
+/// This mirrors [`export_document`] for the raster/PNG path but keeps the encoded image in memory,
+/// which is what headless consumers (such as the agent bridge preview) need.
+pub async fn render_document_to_png_bytes(
+	executor: &DynamicExecutor,
+	wgpu_executor: &wgpu_executor::WgpuExecutor,
+	scale: f64,
+	(width, height): (Option<u32>, Option<u32>),
+	transparent: bool,
+) -> Result<Vec<u8>, Box<dyn Error>> {
+	let rendered = execute_render(executor, wgpu_executor, ExportFormat::Raster, scale, (width, height)).await?;
+
+	match rendered {
+		RenderedOutput::Raster { data, width, height } => encode_raster_image(FileType::Png, data, width, height, transparent),
+		RenderedOutput::Svg(_) => Err("Expected a raster render output for PNG encoding".into()),
+	}
+}
+
 fn write_raster_image(output_path: PathBuf, file_type: FileType, data: Vec<u8>, width: u32, height: u32, transparent: bool) -> Result<(), Box<dyn Error>> {
+	let bytes = encode_raster_image(file_type, data, width, height, transparent)?;
+	std::fs::write(&output_path, bytes)?;
+
+	match file_type {
+		FileType::Png => log::info!("Exported PNG to: {}", output_path.display()),
+		FileType::Jpg => log::info!("Exported JPG to: {}", output_path.display()),
+		FileType::Svg | FileType::Gif => unreachable!("SVG and GIF should have been handled in export_document"),
+	}
+
+	Ok(())
+}
+
+/// Encode a flat RGBA buffer into the requested image format, returning the encoded bytes.
+fn encode_raster_image(file_type: FileType, data: Vec<u8>, width: u32, height: u32, transparent: bool) -> Result<Vec<u8>, Box<dyn Error>> {
 	use image::{ImageFormat, RgbaImage};
 
 	let image = RgbaImage::from_raw(width, height, data).ok_or("Failed to create image from buffer")?;
@@ -106,18 +157,15 @@ fn write_raster_image(output_path: PathBuf, file_type: FileType, data: Vec<u8>, 
 				let image: image::RgbImage = image::DynamicImage::ImageRgba8(image).to_rgb8();
 				image.write_to(&mut cursor, ImageFormat::Png)?;
 			}
-			log::info!("Exported PNG to: {}", output_path.display());
 		}
 		FileType::Jpg => {
 			let image: image::RgbImage = image::DynamicImage::ImageRgba8(image).to_rgb8();
 			image.write_to(&mut cursor, ImageFormat::Jpeg)?;
-			log::info!("Exported JPG to: {}", output_path.display());
 		}
-		FileType::Svg | FileType::Gif => unreachable!("SVG and GIF should have been handled in export_document"),
+		FileType::Svg | FileType::Gif => unreachable!("SVG and GIF should not reach raster image encoding"),
 	}
 
-	std::fs::write(&output_path, cursor.into_inner())?;
-	Ok(())
+	Ok(cursor.into_inner())
 }
 
 /// Parameters for GIF animation export

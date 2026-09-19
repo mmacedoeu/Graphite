@@ -1,32 +1,12 @@
-mod export;
-
 use clap::{Args, Parser, Subcommand};
-use document_container::AnyContainer;
-use document_container::backends::memory::MemoryBackend;
-use document_format::{GddV1, GddV1Layout};
 use fern::colors::{Color, ColoredLevelConfig};
-use futures::executor::block_on;
-use graph_craft::application_io::EditorPreferences;
-use graph_craft::application_io::resource::ResourceRegistry;
-use graph_craft::application_io::{PlatformApplicationIo, PlatformEditorApi};
-use graph_craft::document::*;
-use graph_craft::graphene_compiler::Compiler;
-use graph_craft::proto::ProtoNetwork;
 use graph_craft::util::load_network;
-use graphene_std::application_io::{ApplicationIo, NodeGraphUpdateMessage, NodeGraphUpdateSender};
-use interpreted_executor::dynamic_executor::DynamicExecutor;
-use interpreted_executor::util::wrap_network_in_scope;
+use graphene_cli::engine::{compile_graph, create_application_io, create_editor_api, create_executor, open_gdd, runtime_network_from_gdd};
+use graphene_cli::export;
+use graphene_std::application_io::ApplicationIo;
 use std::error::Error;
 use std::path::PathBuf;
 use std::sync::Arc;
-
-struct UpdateLogger {}
-
-impl NodeGraphUpdateSender for UpdateLogger {
-	fn send(&self, message: NodeGraphUpdateMessage) {
-		println!("{message:?}");
-	}
-}
 
 #[derive(Debug, Parser)]
 #[clap(name = "graphene-cli", version)]
@@ -129,11 +109,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	let gdd = if is_gdd {
 		let archive = std::fs::read(document_path).map_err(|error| format!("Failed to read document {}: {error}", document_path.display()))?;
-		let container = AnyContainer::Memory(MemoryBackend::new());
-		let gdd = document_format::Gdd::open_from_archive(archive.as_ref(), container, GddV1Layout)
-			.await
-			.map_err(|error| format!("Failed to open document: {error}"))?;
-		Some(gdd)
+		Some(open_gdd(archive.as_ref()).await?)
 	} else {
 		None
 	};
@@ -152,11 +128,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 	// Build the runtime network: from the `.gdd` registry, or by loading a legacy `.graphite` document.
 	let node_network = match &gdd {
-		Some(gdd) => {
-			let declarations = gdd.declarations(gdd).await;
-			let (node_network, _metadata) = gdd.registry().to_runtime_with_metadata(&declarations)?;
-			node_network
-		}
+		Some(gdd) => runtime_network_from_gdd(gdd).await?,
 		None => {
 			let document_string = std::fs::read_to_string(document_path).map_err(|error| format!("Failed to read document {}: {error}", document_path.display()))?;
 			load_network(&document_string)
@@ -164,29 +136,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 	};
 
 	log::info!("Creating GPU context");
-	let mut application_io = PlatformApplicationIo::new().await;
-	if let Some(gdd) = &gdd {
-		application_io.inject_resource_proxy(Box::new(gdd.resource_proxy()));
-	}
-
 	// Convert application_io to Arc first
-	let application_io_arc = Arc::new(application_io);
-
-	// Clone the application_io Arc before borrowing to extract executor
-	let application_io_for_api = application_io_arc.clone();
+	let application_io_arc = Arc::new(create_application_io(gdd.as_ref()).await);
 
 	// Get reference to wgpu executor and clone device handle
 	let wgpu_executor_ref = application_io_arc.gpu_executor().unwrap();
 	let device = wgpu_executor_ref.context().device.clone();
 
-	let preferences = EditorPreferences {
-		max_render_region_size: EditorPreferences::default().max_render_region_size,
-	};
-	let editor_api = Arc::new(PlatformEditorApi {
-		application_io: Some(application_io_for_api),
-		node_graph_message_sender: Box::new(UpdateLogger {}),
-		editor_preferences: Box::new(preferences),
-	});
+	let editor_api = create_editor_api(application_io_arc.clone());
 	let proto_graph = compile_graph(node_network, editor_api, gdd.as_ref())?;
 
 	match app.command {
@@ -247,7 +204,7 @@ fn init_logging(log_level: u8) {
 	};
 	let colors = ColoredLevelConfig::new().debug(Color::Magenta).info(Color::Green).error(Color::Red);
 	fern::Dispatch::new()
-		.chain(std::io::stdout())
+		.chain(std::io::stderr())
 		.level_for("wgpu", log::LevelFilter::Error)
 		.level_for("naga", log::LevelFilter::Error)
 		.level_for("wgpu_hal", log::LevelFilter::Error)
@@ -265,27 +222,4 @@ fn init_logging(log_level: u8) {
 		})
 		.apply()
 		.unwrap();
-}
-
-fn compile_graph(network: NodeNetwork, editor_api: Arc<PlatformEditorApi>, gdd: Option<&GddV1>) -> Result<ProtoNetwork, Box<dyn Error>> {
-	let preprocessor = preprocessor::Preprocessor::new();
-
-	let mut network = wrap_network_in_scope(network, editor_api);
-
-	// A `.gdd` resolves resource hashes from its registry; a legacy `.graphite` has no resource store, so it
-	// preprocesses against an empty registry (matching the pre-`.gdd` CLI behavior).
-	match gdd {
-		Some(gdd) => preprocessor
-			.preprocess(&mut network, &|resource_id| gdd.registry().resources.get(&resource_id).and_then(|r| r.hash))
-			.expect("Failed to expand network"),
-		None => { preprocessor.preprocess(&mut network, &|_| None) }.expect("Failed to expand network"),
-	}
-
-	let compiler = Compiler {};
-	compiler.compile_single(network).map_err(|x| x.into())
-}
-
-fn create_executor(proto_network: ProtoNetwork) -> Result<DynamicExecutor, Box<dyn Error>> {
-	let executor = block_on(DynamicExecutor::new(proto_network)).map_err(|errors| errors.iter().map(|e| format!("{e:?}")).reduce(|acc, e| format!("{acc}\n{e}")).unwrap_or_default())?;
-	Ok(executor)
 }
