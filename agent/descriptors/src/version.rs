@@ -124,12 +124,14 @@ mod tests {
 			input_schema: json!({ "type": "object", "properties": {} }),
 			output_schema: json!({ "type": "object" }),
 			version,
+			meta: None,
 		}
 	}
 
-	/// T3.5: the protocol type's §5.1 shape is fixed. This exhaustive destructuring
-	/// is a compile-time proof: if a field were added to or removed from
-	/// `ToolDescriptor` to support versioning, this test would stop compiling.
+	/// T3.5: the protocol type's §5.1 shape is fixed, except for the additive
+	/// optional `meta` field (E-18). This exhaustive destructuring is a compile-time
+	/// proof: if a field were added to or removed from `ToolDescriptor`, this test
+	/// would stop compiling and force a deliberate review.
 	#[test]
 	fn protocol_descriptor_shape_is_untouched_by_versioning() {
 		let descriptor = descriptor("command.tool.select.pointermove", VERSION);
@@ -146,7 +148,9 @@ mod tests {
 			input_schema,
 			output_schema,
 			version,
+			meta,
 		} = changed;
+		assert!(meta.is_none(), "catalog descriptors carry no `_meta`");
 		assert_eq!(name, "command.tool.select.pointermove");
 		assert!(!description.is_empty());
 		assert_eq!(capability, Capability::Read);

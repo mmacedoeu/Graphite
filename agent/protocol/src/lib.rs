@@ -38,6 +38,11 @@ pub struct ToolDescriptor {
 	pub input_schema: serde_json::Value, // JSON Schema draft 2020-12
 	pub output_schema: serde_json::Value,
 	pub version: u32,
+	/// Optional MCP `_meta` object, copied verbatim into the tool's `tools/list`
+	/// entry (E-18). `None` for every catalog descriptor; only curated tools whose
+	/// text result can exceed a host's default result cap carry a size hint.
+	#[serde(default, skip_serializing_if = "Option::is_none")]
+	pub meta: Option<serde_json::Value>,
 }
 
 /// Adapter-facing request. Carries no id and no capability (INV-6, INV-14).

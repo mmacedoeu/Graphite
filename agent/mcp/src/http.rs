@@ -184,6 +184,7 @@ async fn dispatch(host: &Host, message: &Value, ids: &mut HashMap<JsonRpcId, gra
 				"protocolVersion": PROTOCOL_VERSION,
 				"capabilities": { "tools": {}, "resources": {}, "prompts": {}, "logging": {} },
 				"serverInfo": { "name": "graphite-agent", "version": env!("CARGO_PKG_VERSION") },
+				"instructions": crate::SERVER_INSTRUCTIONS,
 			}),
 		)),
 		"notifications/initialized" => None,

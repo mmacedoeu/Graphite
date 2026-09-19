@@ -169,16 +169,28 @@ fn initialize_and_tools_list_match_the_curated_surface() {
 	for capability in ["tools", "resources", "prompts", "logging"] {
 		assert!(initialize["result"]["capabilities"].get(capability).is_some(), "missing capability {capability}");
 	}
+	// E-18: hosts surface `instructions` as server-wide guidance, so the workflow
+	// must actually be served rather than left to external documentation.
+	let instructions = initialize["result"]["instructions"].as_str().expect("`initialize` must carry `instructions`");
+	assert!(instructions.contains("node.list_types"), "instructions must name the discovery tools: {instructions}");
 
 	let listed = agent.request("tools/list", json!({}));
-	let names: BTreeSet<String> = listed["result"]["tools"]
-		.as_array()
-		.expect("tools array")
-		.iter()
-		.map(|tool| tool["name"].as_str().expect("tool name").to_string())
-		.collect();
+	let tools = listed["result"]["tools"].as_array().expect("tools array").clone();
+	let names: BTreeSet<String> = tools.iter().map(|tool| tool["name"].as_str().expect("tool name").to_string()).collect();
 	let expected: BTreeSet<String> = EXPECTED_TOOLS.iter().map(|name| name.to_string()).collect();
 	assert_eq!(names, expected, "tools/list must equal the §17 curated tools plus node.list_types/node.describe");
+
+	// E-18: the large-output tools carry a result-size annotation, and nothing else
+	// does, so the annotation keeps its meaning.
+	for name in ["node.list_types", "graph.list_nodes", "render.preview"] {
+		let tool = tools.iter().find(|tool| tool["name"] == name).unwrap_or_else(|| panic!("{name} is missing from tools/list"));
+		assert!(
+			tool["_meta"]["anthropic/maxResultSizeChars"].as_u64().is_some_and(|chars| chars > 0),
+			"{name} must carry a `_meta` size annotation"
+		);
+	}
+	let annotated: Vec<&str> = tools.iter().filter(|tool| tool.get("_meta").is_some()).filter_map(|tool| tool["name"].as_str()).collect();
+	assert_eq!(annotated.len(), 3, "unexpected annotated tools: {annotated:?}");
 
 	// The generated catalog is non-empty and surfaced through the resource.
 	let catalog = agent.request("resources/read", json!({ "uri": "graphite://node-catalog" }));

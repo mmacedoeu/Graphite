@@ -157,7 +157,7 @@ impl Host {
 		for (index, module) in modules.iter().enumerate() {
 			for descriptor in module.descriptors() {
 				module_index.insert(descriptor.name.clone(), index);
-				descriptors.push(descriptor);
+				descriptors.push(crate::modules::annotate(descriptor));
 			}
 		}
 
@@ -351,6 +351,44 @@ mod tests {
 
 	fn host(capabilities: CapabilitySet) -> Host {
 		Host::new(Box::new(NullBridge), capabilities, Duration::from_secs(30), std::env::temp_dir().join("graphite-agent-host-test"))
+	}
+
+	/// E-20: Claude Code flattens a root-level `anyOf`/`oneOf`/`allOf` before sending
+	/// a tool to the API, which degrades the constraint into a description hint. The
+	/// curated surface must therefore stay a plain object schema.
+	#[test]
+	fn curated_schemas_have_no_root_combinator() {
+		let host = host(CapabilitySet::default());
+		for descriptor in host.descriptors() {
+			for (label, schema) in [("input", &descriptor.input_schema), ("output", &descriptor.output_schema)] {
+				assert_eq!(
+					schema.get("type").and_then(serde_json::Value::as_str),
+					Some("object"),
+					"{} {label} schema is not an object",
+					descriptor.name
+				);
+				for combinator in ["anyOf", "oneOf", "allOf"] {
+					assert!(schema.get(combinator).is_none(), "{} {label} schema has a root-level `{combinator}`", descriptor.name);
+				}
+			}
+		}
+	}
+
+	/// E-18: the size annotation reaches `tools/list` only through `annotate`, so the
+	/// table and the descriptors must agree exactly.
+	#[test]
+	fn annotations_cover_exactly_the_large_output_tools() {
+		let host = host(CapabilitySet::default());
+		let mut annotated: Vec<String> = host
+			.descriptors()
+			.into_iter()
+			.filter(|descriptor| descriptor.meta.is_some())
+			.map(|descriptor| descriptor.name)
+			.collect();
+		let mut expected = crate::modules::annotated_tool_names();
+		annotated.sort();
+		expected.sort();
+		assert_eq!(annotated, expected, "the annotation table and the curated descriptors disagree");
 	}
 
 	#[test]

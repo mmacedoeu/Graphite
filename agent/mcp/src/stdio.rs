@@ -137,6 +137,7 @@ impl Connection {
 					"protocolVersion": PROTOCOL_VERSION,
 					"capabilities": { "tools": {}, "resources": {}, "prompts": {}, "logging": {} },
 					"serverInfo": { "name": "graphite-agent", "version": env!("CARGO_PKG_VERSION") },
+					"instructions": crate::SERVER_INSTRUCTIONS,
 				}),
 			)),
 			"notifications/initialized" => None,
@@ -240,11 +241,19 @@ pub(crate) fn tools_list(host: &dyn ToolHost) -> Value {
 		.descriptors()
 		.into_iter()
 		.map(|descriptor| {
-			json!({
+			let mut entry = json!({
 				"name": descriptor.name,
 				"description": descriptor.description,
 				"inputSchema": descriptor.input_schema,
-			})
+			});
+			// E-18: a per-tool `_meta` object is copied verbatim, which is how a
+			// large-output tool raises Claude Code's result-size ceiling.
+			if let Some(meta) = descriptor.meta
+				&& let Some(object) = entry.as_object_mut()
+			{
+				object.insert("_meta".to_string(), meta);
+			}
+			entry
 		})
 		.collect();
 	json!({ "tools": tools })

@@ -19,6 +19,7 @@ path = "src/main.rs"
 graphite-agent-host = { path = "../host" }
 graphite-agent-mcp = { path = "../mcp" }
 graphite-agent-protocol = { path = "../protocol" }
+graphite-agent-descriptors = { path = "../descriptors" }
 graphene-cli = { path = "../../node-graph/graphene-cli" }
 
 # Workspace dependencies

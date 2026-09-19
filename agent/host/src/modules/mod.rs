@@ -25,7 +25,54 @@ pub(crate) fn descriptor(name: &str, description: &str, capability: Capability, 
 		input_schema,
 		output_schema,
 		version: 1,
+		meta: None,
 	}
+}
+
+/// The documented hard ceiling for the `anthropic/maxResultSizeChars` annotation.
+pub(crate) const MAX_RESULT_SIZE_CHARS_CEILING: u32 = 500_000;
+
+/// The one size annotation we emit. Claude Code persists an oversized *text* tool
+/// result to disk and replaces it with a file reference above ~10k tokens (25k by
+/// default); `_meta["anthropic/maxResultSizeChars"]` raises that ceiling for one
+/// tool. The value is clamped to the host's documented hard limit rather than
+/// rejected, so a wrong constant degrades instead of panicking (E-18).
+pub(crate) fn max_result_size_chars(chars: u32) -> Value {
+	json!({ "anthropic/maxResultSizeChars": chars.min(MAX_RESULT_SIZE_CHARS_CEILING) })
+}
+
+/// Names whose text result can exceed a host's default result cap, with the
+/// ceiling each one asks for. Centralized here so the tools stay the single
+/// source of truth: the modules build the descriptors and this table only
+/// annotates them.
+fn size_annotation(tool: &str) -> Option<u32> {
+	match tool {
+		// The whole generated node catalog: 335 entries with descriptions.
+		"node.list_types" => Some(200_000),
+		// A large graph's node dump.
+		"graph.list_nodes" => Some(200_000),
+		// A base64 PNG, and the only tool that can plausibly reach the ceiling.
+		"render.preview" => Some(MAX_RESULT_SIZE_CHARS_CEILING),
+		_ => None,
+	}
+}
+
+/// Attach the size annotation to a curated descriptor, if it needs one (E-18).
+pub fn annotate(descriptor: ToolDescriptor) -> ToolDescriptor {
+	match size_annotation(&descriptor.name) {
+		Some(chars) => {
+			let mut descriptor = descriptor;
+			descriptor.meta = Some(max_result_size_chars(chars));
+			descriptor
+		}
+		None => descriptor,
+	}
+}
+
+/// Every tool name that carries a size annotation. Used by the conformance tests to
+/// prove each annotated name is a real `tools/list` entry.
+pub fn annotated_tool_names() -> Vec<String> {
+	["node.list_types", "graph.list_nodes", "render.preview"].into_iter().map(str::to_string).collect()
 }
 
 /// Submit one curated query under the host-allocated call id and drive the editor
@@ -123,5 +170,33 @@ pub(crate) fn optional_f64(call: &ToolCall, key: &str, default: f64) -> Result<f
 		Some(value) => value.as_f64().ok_or_else(|| ToolError::InvalidArguments {
 			message: format!("argument `{key}` must be a number"),
 		}),
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	fn plain(name: &str) -> ToolDescriptor {
+		descriptor(name, "description", Capability::Read, json!({}), json!({}))
+	}
+
+	#[test]
+	fn only_listed_tools_receive_an_annotation() {
+		assert!(annotate(plain("document.new")).meta.is_none(), "an unrelated tool gained a `_meta` entry");
+		let annotated = annotate(plain("render.preview"));
+		assert_eq!(annotated.meta.expect("meta")["anthropic/maxResultSizeChars"], MAX_RESULT_SIZE_CHARS_CEILING);
+	}
+
+	#[test]
+	fn every_annotated_name_resolves_to_a_ceiling() {
+		for name in annotated_tool_names() {
+			assert!(size_annotation(&name).is_some(), "{name} resolves to no annotation");
+		}
+	}
+
+	#[test]
+	fn a_ceiling_above_the_host_limit_is_clamped_not_rejected() {
+		assert_eq!(max_result_size_chars(u32::MAX)["anthropic/maxResultSizeChars"], MAX_RESULT_SIZE_CHARS_CEILING);
 	}
 }

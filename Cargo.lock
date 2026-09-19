@@ -2283,6 +2283,7 @@ dependencies = [
  "anyhow",
  "clap",
  "graphene-cli",
+ "graphite-agent-descriptors",
  "graphite-agent-host",
  "graphite-agent-mcp",
  "graphite-agent-protocol",

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "graphite": {
+      "type": "stdio",
+      "command": "${GRAPHITE_AGENT_BIN:-graphite-agent}",
+      "args": [
+        "--mode",
+        "headless",
+        "--stdio",
+        "--root",
+        "${CLAUDE_PROJECT_DIR:-.}"
+      ],
+      "env": {}
+    }
+  }
+}

@@ -152,6 +152,8 @@ fn command_descriptor(tree: &DebugMessageTree, global_name: &str) -> ToolDescrip
 			"x-command-path": global_name,
 		}),
 		version: VERSION,
+		// Catalog data never reaches `tools/list`, so it carries no `_meta` (E-18).
+		meta: None,
 	}
 }
 

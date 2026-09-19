@@ -13,6 +13,20 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
+mod clients;
+mod setup;
+
+/// Installation helpers: configure a host CLI for this server, or diagnose one.
+#[derive(clap::Subcommand, Debug)]
+enum Command {
+	/// Print a host CLI's configuration without writing anything.
+	PrintConfig(setup::PrintConfigArgs),
+	/// Write a host CLI's configuration, merging into any existing file.
+	Install(setup::InstallArgs),
+	/// Check that the server and its client configuration actually work.
+	Doctor(setup::DoctorArgs),
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, ValueEnum)]
 enum Mode {
 	Headless,
@@ -22,7 +36,12 @@ enum Mode {
 
 #[derive(Parser, Debug)]
 #[command(name = "graphite-agent", version, about = "Graphite agentic MCP server")]
+#[command(args_conflicts_with_subcommands = true)]
 struct Cli {
+	/// Installation helpers. Without one, the process serves MCP.
+	#[command(subcommand)]
+	command: Option<Command>,
+
 	/// Session mode.
 	#[arg(long, value_enum, default_value_t = Mode::Headless)]
 	mode: Mode,
@@ -39,9 +58,9 @@ struct Cli {
 	#[arg(long)]
 	http_allow_non_loopback: bool,
 
-	/// Confinement root for every file-path tool (INV-12). Required.
+	/// Confinement root for every file-path tool (INV-12). Required when serving.
 	#[arg(long)]
-	root: PathBuf,
+	root: Option<PathBuf>,
 
 	/// Working-copy / storage directory (defaults to `<root>/.graphite-agent-working-copy`).
 	#[arg(long)]
@@ -68,6 +87,16 @@ struct Cli {
 fn main() -> anyhow::Result<()> {
 	let cli = Cli::parse();
 
+	// Installation helpers never serve MCP, so they exit before the serving path.
+	match cli.command {
+		Some(Command::PrintConfig(args)) => return setup::print_config(&args),
+		Some(Command::Install(args)) => return setup::install(&args),
+		Some(Command::Doctor(args)) => return setup::doctor(&args),
+		None => {}
+	}
+
+	let root = cli.root.clone().context("--root is required to serve MCP (it is the confinement root, INV-12)")?;
+
 	// T4.7: attached/peer sessions are attenuated to their mode ceiling; a request
 	// for a capability outside it is refused as Unauthorized.
 	let capabilities = match cli.mode {
@@ -92,7 +121,6 @@ fn main() -> anyhow::Result<()> {
 		_ => None,
 	};
 
-	let root = cli.root.clone();
 	let storage = cli.storage.clone();
 	let timeout = Duration::from_secs(cli.timeout_seconds.max(1));
 	let http = cli.http.clone();

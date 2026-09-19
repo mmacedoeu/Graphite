@@ -110,6 +110,8 @@ fn node_descriptor(identifier: &str, metadata: &NodeMetadata) -> ToolDescriptor 
 		input_schema,
 		output_schema,
 		version: 1,
+		// Catalog data never reaches `tools/list`, so it carries no `_meta` (E-18).
+		meta: None,
 	}
 }
 
