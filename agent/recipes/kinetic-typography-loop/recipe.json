@@ -1,0 +1,25 @@
+{
+  "id": "kinetic-typography-loop",
+  "category": "Motion",
+  "summary": "Animated headline: build, hold, kern-snap, all on a 4s seamless loop.",
+  "aliases": ["animated-type", "loop-type"],
+  "color": "#DADCEE",
+  "required": [
+    "graphene_core::animation::AnimationTimeNode",
+    "graphene_std::text::TextToVectorNode",
+    "vector_nodes::generator_nodes::RectangleNode",
+    "blending_nodes::OpacityNode"
+  ],
+  "defaults": {
+    "fps": 30,
+    "frames": 120,
+    "loop": true
+  },
+  "source": {
+    "path": "agent/recipes/kinetic-typography-loop/source.gdd",
+    "asset": "agent/recipes/kinetic-typography-loop/asset.gif",
+    "format_version": 1
+  },
+  "template_path": "agent/recipes/kinetic-typography-loop/template.md",
+  "template_version": 1
+}

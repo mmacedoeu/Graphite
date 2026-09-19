@@ -1,0 +1,26 @@
+{
+  "id": "wireframe-progressive-build",
+  "category": "Geometry",
+  "summary": "Wireframe-to-solid progressive build over 4 seconds.",
+  "aliases": ["blueprint-build"],
+  "color": "#3DB1D0",
+  "required": [
+    "graphene_core::animation::AnimationTimeNode",
+    "vector_nodes::generator_nodes::RectangleNode",
+    "vector_nodes::generator_nodes::LineNode",
+    "graphene_core::vector::StrokeNode",
+    "graphene_core::vector::FillNode"
+  ],
+  "defaults": {
+    "fps": 30,
+    "frames": 120,
+    "loop": true
+  },
+  "source": {
+    "path": "agent/recipes/wireframe-progressive-build/source.gdd",
+    "asset": "agent/recipes/wireframe-progressive-build/asset.gif",
+    "format_version": 1
+  },
+  "template_path": "agent/recipes/wireframe-progressive-build/template.md",
+  "template_version": 1
+}

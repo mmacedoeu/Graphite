@@ -1,0 +1,26 @@
+{
+  "id": "exploded-component-cycle",
+  "category": "Compositing",
+  "summary": "Four-component vector exploded and reassembled over a 6s loop.",
+  "aliases": ["component-cycle"],
+  "color": "#A57B5C",
+  "required": [
+    "graphene_core::animation::AnimationTimeNode",
+    "graphene_core::vector::StrokeNode",
+    "blending_nodes::OpacityNode",
+    "vector_nodes::generator_nodes::RectangleNode",
+    "vector_nodes::generator_nodes::LineNode"
+  ],
+  "defaults": {
+    "fps": 30,
+    "frames": 180,
+    "loop": true
+  },
+  "source": {
+    "path": "agent/recipes/exploded-component-cycle/source.gdd",
+    "asset": "agent/recipes/exploded-component-cycle/asset.gif",
+    "format_version": 1
+  },
+  "template_path": "agent/recipes/exploded-component-cycle/template.md",
+  "template_version": 1
+}

@@ -1,0 +1,25 @@
+{
+  "id": "pulse-glow",
+  "category": "Motion",
+  "summary": "Real-time sin-wave brightness modulation: a soft pulse on the subject.",
+  "aliases": ["breathe", "sin-pulse"],
+  "color": "#5B7CC9",
+  "required": [
+    "graphene_core::animation::RealTimeNode",
+    "raster_nodes::adjustments::brightness_contrast_shader_node::BrightnessContrastShaderNodeNode",
+    "math_nodes::MathNode",
+    "math_nodes::SineNode"
+  ],
+  "defaults": {
+    "fps": 30,
+    "frames": 60,
+    "loop": true
+  },
+  "source": {
+    "path": "agent/recipes/pulse-glow/source.gdd",
+    "asset": "agent/recipes/pulse-glow/asset.gif",
+    "format_version": 1
+  },
+  "template_path": "agent/recipes/pulse-glow/template.md",
+  "template_version": 1
+}

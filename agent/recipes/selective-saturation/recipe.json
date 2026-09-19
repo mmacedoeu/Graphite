@@ -1,0 +1,19 @@
+{
+  "id": "selective-saturation",
+  "category": "Color",
+  "summary": "Mask-driven selective saturation: pump the subject, leave the rest.",
+  "aliases": ["punch-subject"],
+  "required": [
+    "raster_nodes::image_color_palette::ImageColorPaletteNode",
+    "raster_nodes::adjustments::HueSaturationNode",
+    "blending_nodes::ClippingMaskNode"
+  ],
+  "defaults": {},
+  "source": {
+    "path": "agent/recipes/selective-saturation/source.gdd",
+    "asset": "agent/recipes/selective-saturation/asset.png",
+    "format_version": 1
+  },
+  "template_path": "agent/recipes/selective-saturation/template.md",
+  "template_version": 1
+}

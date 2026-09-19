@@ -1,0 +1,19 @@
+{
+  "id": "lut-grade-warm",
+  "category": "Color",
+  "summary": "Warm-tone grading with a generated gradient LUT and a soft saturate.",
+  "aliases": ["warm-grade"],
+  "required": [
+    "math_nodes::EvaluateGradientNode",
+    "math_nodes::RgbaToColorNode",
+    "raster_nodes::adjustments::HueSaturationNode"
+  ],
+  "defaults": {},
+  "source": {
+    "path": "agent/recipes/lut-grade-warm/source.gdd",
+    "asset": "agent/recipes/lut-grade-warm/asset.png",
+    "format_version": 1
+  },
+  "template_path": "agent/recipes/lut-grade-warm/template.md",
+  "template_version": 1
+}

@@ -1,0 +1,19 @@
+{
+  "id": "kinetic-type-static",
+  "category": "Typography",
+  "summary": "Single-frame typographic composition with kerned headline + caption.",
+  "aliases": ["typography-static"],
+  "required": [
+    "graphene_std::text::TextToVectorNode",
+    "graphene_core::vector::FillNode",
+    "graphene_core::vector::StrokeNode"
+  ],
+  "defaults": {},
+  "source": {
+    "path": "agent/recipes/kinetic-type-static/source.gdd",
+    "asset": "agent/recipes/kinetic-type-static/asset.png",
+    "format_version": 1
+  },
+  "template_path": "agent/recipes/kinetic-type-static/template.md",
+  "template_version": 1
+}

@@ -1,0 +1,25 @@
+{
+  "id": "feedback-trail-color",
+  "category": "Motion",
+  "summary": "Per-frame feedback trail: a trail-coloured trail behind a moving layer.",
+  "aliases": ["color-trail"],
+  "color": "#7AA8FF",
+  "required": [
+    "graphene_core::animation::AnimationTimeNode",
+    "blending_nodes::BlendModeNode",
+    "blending_nodes::OpacityNode",
+    "raster_nodes::adjustments::ThresholdNode"
+  ],
+  "defaults": {
+    "fps": 30,
+    "frames": 60,
+    "loop": true
+  },
+  "source": {
+    "path": "agent/recipes/feedback-trail-color/source.gdd",
+    "asset": "agent/recipes/feedback-trail-color/asset.gif",
+    "format_version": 1
+  },
+  "template_path": "agent/recipes/feedback-trail-color/template.md",
+  "template_version": 1
+}

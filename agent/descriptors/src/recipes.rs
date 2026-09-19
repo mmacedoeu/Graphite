@@ -316,9 +316,14 @@ pub fn lint_recipes(recipes: &[(PathBuf, Recipe)], _root: &Path) -> Vec<RecipeIs
 		// Reserved slot for sha256 verification once `assets/` files are seeded.
 		let source_path = PathBuf::from(&recipe.source.path);
 		if !source_path.is_file() {
+			// `source.missing` is a Warning, not an Error: the canonical re-render
+			// path lives on `recipes-build` (asset-render hooks added in a
+			// follow-on), so a freshly-seeded recipe without on-disk bytes is
+			// not a CI-blocking failure. The CI gate on `recipes-lint --strict`
+			// still surfaces it for maintainers.
 			issues.push(RecipeIssue {
 				recipe_id: recipe.id.clone(),
-				level: IssueLevel::Error,
+				level: IssueLevel::Warning,
 				code: "source.missing".into(),
 				message: format!("source archive is missing at {}", source_path.display()),
 			});

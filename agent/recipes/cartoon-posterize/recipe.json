@@ -1,0 +1,19 @@
+{
+  "id": "cartoon-posterize",
+  "category": "Filtering",
+  "summary": "Posterize bands + median filter for a flat, edge-clean illustration.",
+  "aliases": ["toon-shader", "comic-flatten"],
+  "required": [
+    "raster_nodes::adjustments::posterize_shader_node::PosterizeShaderNodeNode",
+    "raster_nodes::filter::MedianFilterNode",
+    "raster_nodes::adjustments::ThresholdNode"
+  ],
+  "defaults": {},
+  "source": {
+    "path": "agent/recipes/cartoon-posterize/source.gdd",
+    "asset": "agent/recipes/cartoon-posterize/asset.png",
+    "format_version": 1
+  },
+  "template_path": "agent/recipes/cartoon-posterize/template.md",
+  "template_version": 1
+}

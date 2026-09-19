@@ -1,0 +1,297 @@
+{
+  "count": 10,
+  "recipes": [
+    {
+      "aliases": [
+        "layer-stack",
+        "alpha-stack"
+      ],
+      "category": "Compositing",
+      "color": null,
+      "defaults": {
+        "fps": null,
+        "frames": null,
+        "loop": null
+      },
+      "id": "alpha-composite-stack",
+      "required": [
+        "blending_nodes::ClippingMaskNode",
+        "blending_nodes::OpacityNode",
+        "blending_nodes::BlendModeNode"
+      ],
+      "source": {
+        "asset": "agent/recipes/alpha-composite-stack/asset.png",
+        "asset_sha256": null,
+        "format_version": 1,
+        "path": "agent/recipes/alpha-composite-stack/source.gdd",
+        "sha256": null
+      },
+      "summary": "Three-layer alpha composite stack with per-layer blend modes.",
+      "template_path": "agent/recipes/alpha-composite-stack/template.md",
+      "template_version": 1
+    },
+    {
+      "aliases": [
+        "toon-shader",
+        "comic-flatten"
+      ],
+      "category": "Filtering",
+      "color": null,
+      "defaults": {
+        "fps": null,
+        "frames": null,
+        "loop": null
+      },
+      "id": "cartoon-posterize",
+      "required": [
+        "raster_nodes::adjustments::posterize_shader_node::PosterizeShaderNodeNode",
+        "raster_nodes::filter::MedianFilterNode",
+        "raster_nodes::adjustments::ThresholdNode"
+      ],
+      "source": {
+        "asset": "agent/recipes/cartoon-posterize/asset.png",
+        "asset_sha256": null,
+        "format_version": 1,
+        "path": "agent/recipes/cartoon-posterize/source.gdd",
+        "sha256": null
+      },
+      "summary": "Posterize bands + median filter for a flat, edge-clean illustration.",
+      "template_path": "agent/recipes/cartoon-posterize/template.md",
+      "template_version": 1
+    },
+    {
+      "aliases": [
+        "component-cycle"
+      ],
+      "category": "Compositing",
+      "color": "#A57B5C",
+      "defaults": {
+        "fps": 30.0,
+        "frames": 180,
+        "loop": null
+      },
+      "id": "exploded-component-cycle",
+      "required": [
+        "graphene_core::animation::AnimationTimeNode",
+        "graphene_core::vector::StrokeNode",
+        "blending_nodes::OpacityNode",
+        "vector_nodes::generator_nodes::RectangleNode",
+        "vector_nodes::generator_nodes::LineNode"
+      ],
+      "source": {
+        "asset": "agent/recipes/exploded-component-cycle/asset.gif",
+        "asset_sha256": null,
+        "format_version": 1,
+        "path": "agent/recipes/exploded-component-cycle/source.gdd",
+        "sha256": null
+      },
+      "summary": "Four-component vector exploded and reassembled over a 6s loop.",
+      "template_path": "agent/recipes/exploded-component-cycle/template.md",
+      "template_version": 1
+    },
+    {
+      "aliases": [
+        "color-trail"
+      ],
+      "category": "Motion",
+      "color": "#7AA8FF",
+      "defaults": {
+        "fps": 30.0,
+        "frames": 60,
+        "loop": null
+      },
+      "id": "feedback-trail-color",
+      "required": [
+        "graphene_core::animation::AnimationTimeNode",
+        "blending_nodes::BlendModeNode",
+        "blending_nodes::OpacityNode",
+        "raster_nodes::adjustments::ThresholdNode"
+      ],
+      "source": {
+        "asset": "agent/recipes/feedback-trail-color/asset.gif",
+        "asset_sha256": null,
+        "format_version": 1,
+        "path": "agent/recipes/feedback-trail-color/source.gdd",
+        "sha256": null
+      },
+      "summary": "Per-frame feedback trail: a trail-coloured trail behind a moving layer.",
+      "template_path": "agent/recipes/feedback-trail-color/template.md",
+      "template_version": 1
+    },
+    {
+      "aliases": [
+        "typography-static"
+      ],
+      "category": "Typography",
+      "color": null,
+      "defaults": {
+        "fps": null,
+        "frames": null,
+        "loop": null
+      },
+      "id": "kinetic-type-static",
+      "required": [
+        "graphene_std::text::TextToVectorNode",
+        "graphene_core::vector::FillNode",
+        "graphene_core::vector::StrokeNode"
+      ],
+      "source": {
+        "asset": "agent/recipes/kinetic-type-static/asset.png",
+        "asset_sha256": null,
+        "format_version": 1,
+        "path": "agent/recipes/kinetic-type-static/source.gdd",
+        "sha256": null
+      },
+      "summary": "Single-frame typographic composition with kerned headline + caption.",
+      "template_path": "agent/recipes/kinetic-type-static/template.md",
+      "template_version": 1
+    },
+    {
+      "aliases": [
+        "animated-type",
+        "loop-type"
+      ],
+      "category": "Motion",
+      "color": "#DADCEE",
+      "defaults": {
+        "fps": 30.0,
+        "frames": 120,
+        "loop": null
+      },
+      "id": "kinetic-typography-loop",
+      "required": [
+        "graphene_core::animation::AnimationTimeNode",
+        "graphene_std::text::TextToVectorNode",
+        "vector_nodes::generator_nodes::RectangleNode",
+        "blending_nodes::OpacityNode"
+      ],
+      "source": {
+        "asset": "agent/recipes/kinetic-typography-loop/asset.gif",
+        "asset_sha256": null,
+        "format_version": 1,
+        "path": "agent/recipes/kinetic-typography-loop/source.gdd",
+        "sha256": null
+      },
+      "summary": "Animated headline: build, hold, kern-snap, all on a 4s seamless loop.",
+      "template_path": "agent/recipes/kinetic-typography-loop/template.md",
+      "template_version": 1
+    },
+    {
+      "aliases": [
+        "warm-grade"
+      ],
+      "category": "Color",
+      "color": null,
+      "defaults": {
+        "fps": null,
+        "frames": null,
+        "loop": null
+      },
+      "id": "lut-grade-warm",
+      "required": [
+        "math_nodes::EvaluateGradientNode",
+        "math_nodes::RgbaToColorNode",
+        "raster_nodes::adjustments::HueSaturationNode"
+      ],
+      "source": {
+        "asset": "agent/recipes/lut-grade-warm/asset.png",
+        "asset_sha256": null,
+        "format_version": 1,
+        "path": "agent/recipes/lut-grade-warm/source.gdd",
+        "sha256": null
+      },
+      "summary": "Warm-tone grading with a generated gradient LUT and a soft saturate.",
+      "template_path": "agent/recipes/lut-grade-warm/template.md",
+      "template_version": 1
+    },
+    {
+      "aliases": [
+        "breathe",
+        "sin-pulse"
+      ],
+      "category": "Motion",
+      "color": "#5B7CC9",
+      "defaults": {
+        "fps": 30.0,
+        "frames": 60,
+        "loop": null
+      },
+      "id": "pulse-glow",
+      "required": [
+        "graphene_core::animation::RealTimeNode",
+        "raster_nodes::adjustments::brightness_contrast_shader_node::BrightnessContrastShaderNodeNode",
+        "math_nodes::MathNode",
+        "math_nodes::SineNode"
+      ],
+      "source": {
+        "asset": "agent/recipes/pulse-glow/asset.gif",
+        "asset_sha256": null,
+        "format_version": 1,
+        "path": "agent/recipes/pulse-glow/source.gdd",
+        "sha256": null
+      },
+      "summary": "Real-time sin-wave brightness modulation: a soft pulse on the subject.",
+      "template_path": "agent/recipes/pulse-glow/template.md",
+      "template_version": 1
+    },
+    {
+      "aliases": [
+        "punch-subject"
+      ],
+      "category": "Color",
+      "color": null,
+      "defaults": {
+        "fps": null,
+        "frames": null,
+        "loop": null
+      },
+      "id": "selective-saturation",
+      "required": [
+        "raster_nodes::image_color_palette::ImageColorPaletteNode",
+        "raster_nodes::adjustments::HueSaturationNode",
+        "blending_nodes::ClippingMaskNode"
+      ],
+      "source": {
+        "asset": "agent/recipes/selective-saturation/asset.png",
+        "asset_sha256": null,
+        "format_version": 1,
+        "path": "agent/recipes/selective-saturation/source.gdd",
+        "sha256": null
+      },
+      "summary": "Mask-driven selective saturation: pump the subject, leave the rest.",
+      "template_path": "agent/recipes/selective-saturation/template.md",
+      "template_version": 1
+    },
+    {
+      "aliases": [
+        "blueprint-build"
+      ],
+      "category": "Geometry",
+      "color": "#3DB1D0",
+      "defaults": {
+        "fps": 30.0,
+        "frames": 120,
+        "loop": null
+      },
+      "id": "wireframe-progressive-build",
+      "required": [
+        "graphene_core::animation::AnimationTimeNode",
+        "vector_nodes::generator_nodes::RectangleNode",
+        "vector_nodes::generator_nodes::LineNode",
+        "graphene_core::vector::StrokeNode",
+        "graphene_core::vector::FillNode"
+      ],
+      "source": {
+        "asset": "agent/recipes/wireframe-progressive-build/asset.gif",
+        "asset_sha256": null,
+        "format_version": 1,
+        "path": "agent/recipes/wireframe-progressive-build/source.gdd",
+        "sha256": null
+      },
+      "summary": "Wireframe-to-solid progressive build over 4 seconds.",
+      "template_path": "agent/recipes/wireframe-progressive-build/template.md",
+      "template_version": 1
+    }
+  ],
+  "schema_version": 1
+}

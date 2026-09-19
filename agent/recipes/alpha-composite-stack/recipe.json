@@ -1,0 +1,19 @@
+{
+  "id": "alpha-composite-stack",
+  "category": "Compositing",
+  "summary": "Three-layer alpha composite stack with per-layer blend modes.",
+  "aliases": ["layer-stack", "alpha-stack"],
+  "required": [
+    "blending_nodes::ClippingMaskNode",
+    "blending_nodes::OpacityNode",
+    "blending_nodes::BlendModeNode"
+  ],
+  "defaults": {},
+  "source": {
+    "path": "agent/recipes/alpha-composite-stack/source.gdd",
+    "asset": "agent/recipes/alpha-composite-stack/asset.png",
+    "format_version": 1
+  },
+  "template_path": "agent/recipes/alpha-composite-stack/template.md",
+  "template_version": 1
+}
