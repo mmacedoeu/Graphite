@@ -27,3 +27,8 @@ serde_json = { workspace = true }
 tokio = { workspace = true }
 clap = { workspace = true, features = ["derive"] }
 anyhow = { workspace = true }
+
+[dev-dependencies]
+# Used by recipes_conformance.rs; the workspace dep matches the rest of
+# the recipes layer (host and descriptors use fancy-regex too).
+fancy-regex = { workspace = true }

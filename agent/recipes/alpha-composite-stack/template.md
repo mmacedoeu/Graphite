@@ -2,12 +2,12 @@
 
 ## Source
 
-Three source layers compose to one image through Opacity + BlendMode + a single
-ClippingMask. The source archive has the same three nodes in their canonical
+Three source layers compose to one image through OpacityNode + BlendModeNode + a single
+ClippingMaskNode. The source archive has the same three nodes in their canonical
 ports: backgrounds feeds a BaseLayer, the mid graphic is a SubjectLayer
 wearing an OpacityNode at 0.85, and the foreground Drop feeds a HighlightLayer
-clipped to a rounded Shape mask. Blend modes use Multiply on the mid layer and
-Normal on the highlight.
+clipped to a rounded Shape mask. The BlendModeNode is configured as Multiply on the mid
+layer and Normal on the highlight.
 
 ## Composition Plan
 
