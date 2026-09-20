@@ -26,11 +26,14 @@ authoritative defaults.
 | Compositing | 2 | `alpha-composite-stack`, `exploded-component-cycle` |
 | Filtering | 1 | `cartoon-posterize` |
 | Geometry | 1 | `wireframe-progressive-build` |
-| Motion | 4 | `feedback-trail-color`, `kinetic-typography-loop`, `pulse-glow`, `exploded-component-cycle` (also Compositing) |
+| Motion | 3 | `feedback-trail-color`, `kinetic-typography-loop`, `pulse-glow` |
 | Typography | 1 | `kinetic-type-static` |
 
-Note that `exploded-component-cycle` carries the `Motion` capability on top
-of `Compositing` — it is a motion+compositing hybrid.
+Note that `exploded-component-cycle` is filed under `Compositing` but
+its `required[]` includes `graphene_core::animation::AnimationTimeNode`
+and its `defaults.frames` is 180 — it is a motion-capable compositing
+recipe. Treat it as Motion when the user wants a moving composite and
+as Compositing when the user wants a static multi-layer result.
 
 ## Picking a recipe
 

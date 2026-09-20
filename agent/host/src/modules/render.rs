@@ -141,7 +141,17 @@ impl ToolModule for RenderModule {
 				"render.preview_gif" => {
 					let max_dimension = optional_u32(&call, "max_dimension", DEFAULT_MAX_DIMENSION)?;
 					let fps = optional_f64(&call, "fps", DEFAULT_GIF_FPS)?;
+					if !fps.is_finite() || fps <= 0.0 {
+						return Err(ToolError::InvalidArguments {
+							message: format!("`fps` must be a positive finite number; got {fps}"),
+						});
+					}
 					let frames = optional_u32(&call, "frames", DEFAULT_GIF_FRAMES)?;
+					if frames == 0 {
+						return Err(ToolError::InvalidArguments {
+							message: "`frames` must be >= 1".into(),
+						});
+					}
 					let bytes = Self::gdd_bytes(bridge, call.id, document).await?;
 					let gif = render_gif_bytes(bytes, fps, frames, max_dimension).await?;
 					Ok(json!({
@@ -180,7 +190,17 @@ impl ToolModule for RenderModule {
 					// INV-12: reject an escaping path before doing any expensive work.
 					let target = self.paths.resolve(&requested)?;
 					let fps = optional_f64(&call, "fps", DEFAULT_GIF_FPS)?;
+					if !fps.is_finite() || fps <= 0.0 {
+						return Err(ToolError::InvalidArguments {
+							message: format!("`fps` must be a positive finite number; got {fps}"),
+						});
+					}
 					let frames = optional_u32(&call, "frames", DEFAULT_GIF_FRAMES)?;
+					if frames == 0 {
+						return Err(ToolError::InvalidArguments {
+							message: "`frames` must be >= 1".into(),
+						});
+					}
 					let max_dimension = optional_u32(&call, "max_dimension", DEFAULT_MAX_DIMENSION)?;
 					let bytes = Self::gdd_bytes(bridge, call.id, document).await?;
 					let gif = render_gif_bytes(bytes, fps, frames, max_dimension).await?;

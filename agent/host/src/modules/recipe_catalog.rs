@@ -46,13 +46,13 @@ pub fn read_catalog_at(path: &Path) -> Value {
 	// committed. If the file carries `count`, leave it; otherwise add it
 	// from the `recipes` array length.
 	let mut value = value;
-	if let Some(recipes) = value.get_mut("recipes").and_then(Value::as_array_mut) {
-		let count = recipes.len();
-		if value.get("count").is_none() {
-			if let Some(object) = value.as_object_mut() {
-				object.insert("count".to_string(), Value::Number(count.into()));
-			}
-		}
+	let needs_count = value.get("count").is_none();
+	let count = value.get_mut("recipes").and_then(Value::as_array_mut).map(|recipes| recipes.len());
+	if needs_count
+		&& let Some(count) = count
+		&& let Some(object) = value.as_object_mut()
+	{
+		object.insert("count".to_string(), Value::Number(count.into()));
 	}
 	value
 }

@@ -112,9 +112,10 @@ that file holds private state and credentials.
   so the generated Codex table raises those timeouts; do not drop them.
 - **Gemini CLI was superseded by Antigravity CLI** (2026-06-18) for unpaid and Google One
   users. Support it only if the user is still on it.
-- **The three large-output tools** (`node.list_types`, `graph.list_nodes`, `render.preview`)
-  carry a `_meta` size annotation because their text output can exceed a host's result cap.
-  If a host truncates or writes results to disk, that annotation is the lever.
+- **The four large-output tools** (`node.list_types`, `graph.list_nodes`, `render.preview`,
+  `render.preview_gif`) carry a `_meta` size annotation because their text output can
+  exceed a host's result cap. The `render.preview_gif` base64 payload is the largest
+  of the four; if a host truncates or writes results to disk, that annotation is the lever.
 - **`--http` does not stream events.** `notifications/message` events are stdio-only.
 
 ## Report

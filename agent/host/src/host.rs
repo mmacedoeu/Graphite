@@ -397,7 +397,7 @@ mod tests {
 	fn descriptors_are_cached_and_include_the_full_curated_surface() {
 		let host = host(CapabilitySet::default());
 		let names: HashSet<String> = host.descriptors().into_iter().map(|descriptor| descriptor.name).collect();
-		assert_eq!(names.len(), 28, "the curated tool surface has 21 §17 tools plus 3 Phase 4 session tools plus 4 Phase 5 registry tools");
+		assert_eq!(names.len(), 33, "the curated tool surface has 21 §17 tools plus 3 Phase 4 session tools plus 4 Phase 5 registry tools plus 2 GIF tools plus 3 recipes tools");
 		for expected in [
 			"document.new",
 			"document.open",
@@ -419,7 +419,9 @@ mod tests {
 			"history.commit",
 			"history.abort",
 			"render.preview",
+			"render.preview_gif",
 			"render.export",
+			"render.export_gif",
 			"session.snapshot",
 			"session.selection",
 			"session.active_document",
@@ -427,6 +429,9 @@ mod tests {
 			"registry.query",
 			"registry.merge",
 			"history.replay",
+			"recipes.list",
+			"recipes.show",
+			"recipes.lint",
 		] {
 			assert!(names.contains(expected), "missing curated tool {expected}");
 		}

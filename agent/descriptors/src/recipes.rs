@@ -307,9 +307,10 @@ pub fn lint_recipes(recipes: &[(PathBuf, Recipe)], _root: &Path) -> Vec<RecipeIs
 				.filter(|issue| issue.recipe_id == recipe.id && issue.code.starts_with("template.heading.missing"))
 				.count()
 				== 0;
-			if template_heading_ok {
-				let template_text = fs::read_to_string(&template_path).unwrap_or_default();
-				check_template_animation_markers(&recipe.id, &text_or_empty(template_text, &template_path), animated, recipe.defaults.frames, recipe.defaults.fps, &mut issues);
+			if template_heading_ok
+				&& let Ok(template_text) = fs::read_to_string(&template_path)
+			{
+				check_template_animation_markers(&recipe.id, &template_text, animated, recipe.defaults.frames, recipe.defaults.fps, &mut issues);
 			}
 		}
 
@@ -330,10 +331,6 @@ pub fn lint_recipes(recipes: &[(PathBuf, Recipe)], _root: &Path) -> Vec<RecipeIs
 		}
 	}
 	issues
-}
-
-fn text_or_empty(fallback: String, _path: &Path) -> String {
-	fallback
 }
 
 fn check_template_headings(recipe_id: &str, text: &str, animated: bool, issues: &mut Vec<RecipeIssue>) {
@@ -443,7 +440,8 @@ fn is_valid_id(id: &str) -> bool {
 }
 
 fn kebab(s: &str) -> String {
-	s.to_lowercase().replace(' ', "-").replace('_', "-")
+	let lowered = s.to_lowercase();
+	str::replace(&lowered, ' ', "-").replace('_', "-")
 }
 
 /// Write `agent/recipes.json` to `path`, pretty-printed with a trailing

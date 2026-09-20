@@ -26,7 +26,9 @@ use std::time::{Duration, Instant};
 const RESPONSE_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// The §17 curated tools plus the two catalog tools plus the three Phase 4 session
-/// tools plus the four Phase 5 registry tools, matching `mcp_conformance.rs`.
+/// tools plus the four Phase 5 registry tools, plus the two GIF render tools
+/// plus the three recipes tools (recipes-and-archetypes plan §6.4), matching
+/// `mcp_conformance.rs`.
 const EXPECTED_TOOLS: &[&str] = &[
 	"document.new",
 	"document.open",
@@ -48,7 +50,9 @@ const EXPECTED_TOOLS: &[&str] = &[
 	"history.commit",
 	"history.abort",
 	"render.preview",
+	"render.preview_gif",
 	"render.export",
+	"render.export_gif",
 	"session.snapshot",
 	"session.selection",
 	"session.active_document",
@@ -56,6 +60,9 @@ const EXPECTED_TOOLS: &[&str] = &[
 	"registry.query",
 	"registry.merge",
 	"history.replay",
+	"recipes.list",
+	"recipes.show",
+	"recipes.lint",
 ];
 
 struct ToolReply {
@@ -235,7 +242,7 @@ fn shipped_binary_lists_tools_and_reads_the_live_session() {
 		.map(|tool| tool["name"].as_str().expect("tool name").to_string())
 		.collect();
 	let expected: BTreeSet<String> = EXPECTED_TOOLS.iter().map(|name| name.to_string()).collect();
-	assert_eq!(names, expected, "attached tools/list must equal the 28-tool surface");
+	assert_eq!(names, expected, "attached tools/list must equal the 33-tool surface (curated + GIF + recipes)");
 
 	// Gate 3: read state the agent did not cause (the seeded human node 1000).
 	let snapshot = agent.call_tool("session.snapshot", json!({ "projection": "node_list", "document_id": 1 }));

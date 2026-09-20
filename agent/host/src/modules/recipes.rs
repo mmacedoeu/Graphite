@@ -119,7 +119,7 @@ impl ToolModule for RecipesModule {
 							let preset_path = template_path
 								.parent()
 								.map(|parent| parent.join("preset.md"))
-								.unwrap_or_else(|| std::path::PathBuf::new());
+								.unwrap_or_else(std::path::PathBuf::new);
 							let has_template = !template_path.as_os_str().is_empty() && template_path.is_file();
 							let required_count = recipe.get("required").and_then(Value::as_array).map(|a| a.len()).unwrap_or(0);
 							json!({
@@ -142,7 +142,7 @@ impl ToolModule for RecipesModule {
 					let preset_path = template_path
 						.parent()
 						.map(|parent| parent.join("preset.md"))
-						.unwrap_or_else(|| std::path::PathBuf::new());
+						.unwrap_or_else(std::path::PathBuf::new);
 					Ok(json!({
 						"id": id,
 						"recipe": recipe,
@@ -151,7 +151,7 @@ impl ToolModule for RecipesModule {
 					}))
 				}
 				"recipes.lint" => {
-					let explicit_root = optional_string(&call, "root").ok().flatten();
+					let explicit_root = optional_string(&call, "root")?;
 					let root_path = Path::new(explicit_root.as_deref().unwrap_or(DEFAULT_RECIPES_ROOT));
 					let recipes = descriptor_recipes::load_all_recipes(root_path).map_err(|error| ToolError::Internal {
 						message: format!("recipes.lint: failed to walk {root_path:?}: {error}"),
