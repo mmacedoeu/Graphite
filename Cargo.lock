@@ -2282,6 +2282,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "clap",
+ "fancy-regex 0.18.0",
  "graphene-cli",
  "graphite-agent-descriptors",
  "graphite-agent-host",
@@ -2326,9 +2327,11 @@ dependencies = [
  "graphite-editor",
  "interpreted-executor",
  "interprocess",
+ "jsonschema",
  "ron",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
  "wgpu-executor",
 ]
